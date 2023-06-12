@@ -38,7 +38,7 @@ import Type.Row (type (+))
 -- | `...:` Any tls.createServer() options can be provided. For servers, the identity options (pfx or key/cert) are usually required.
 -- | `origins` <string[]> An array of origin strings to send within an ORIGIN frame immediately following creation of a new server Http2Session.
 -- | `unknownProtocolTimeout` <number> Specifies a timeout in milliseconds that a server should wait when an 'unknownProtocol' event is emitted. If the socket has not been destroyed by that time the server will destroy it. Default: 10000.
-type Http2CreateSecureServerOptions :: forall k. (Type -> k) -> Row k -> Row k
+type Http2CreateSecureServerOptions :: (Type -> Type) -> Row Type -> Row Type
 type Http2CreateSecureServerOptions f r =
   ( allowHTTP1 :: f Boolean
   , maxDeflateDynamicTableSize :: f Int
@@ -70,7 +70,7 @@ type Http2CreateSecureServerOptions f r =
 -- |    - Returns: <Buffer> | <TypedArray> | <DataView> pre-shared key that must either be a buffer or null to stop the negotiation process. Returned PSK must be compatible with the selected cipher's digest.
 -- |    When negotiating TLS-PSK (pre-shared keys), this function is called with the identity provided by the client. If the return value is null the negotiation process will stop and an "unknown_psk_identity" alert message will be sent to the other party. If the server wishes to hide the fact that the PSK identity was not known, the callback must provide some random data as psk to make the connection fail with "decrypt_error" before negotiation is finished. PSK ciphers are disabled by default, and using TLS-PSK thus requires explicitly specifying a cipher suite with the ciphers option. More information can be found in the RFC 4279.
 -- | `pskIdentityHint` <string> optional hint to send to a client to help with selecting the identity during TLS-PSK negotiation. Will be ignored in TLS 1.3. Upon failing to set pskIdentityHint 'tlsClientError' will be emitted with 'ERR_TLS_PSK_SET_IDENTIY_HINT_FAILED' code.
-type TlsCreateServerOptions :: forall k. (Type -> k) -> Row k -> Row k
+type TlsCreateServerOptions :: (Type -> Type) -> Row Type -> Row Type
 type TlsCreateServerOptions f r =
   ( "ALPNProtocols" :: f (Array String)
   , enableTrace :: f Boolean
@@ -104,7 +104,7 @@ type TlsCreateServerOptions f r =
 -- | `sessionIdContext` <string> Opaque identifier used by servers to ensure session state is not shared between applications. Unused by clients.
 -- | `ticketKeys`: <Buffer> 48-bytes of cryptographically strong pseudorandom data. See Session Resumption for more information.
 -- | `sessionTimeout` <number> The number of seconds after which a TLS session created by the server will no longer be resumable. See Session Resumption for more information. Default: 300.
-type TlsSecureContextOptions :: forall k. (Type -> k) -> Row k -> Row k
+type TlsSecureContextOptions :: (Type -> Type) -> Row Type -> Row Type
 type TlsSecureContextOptions f r =
   ( ca :: f (Array ImmutableBuffer)
   , cert :: f (Array ImmutableBuffer)
@@ -135,7 +135,7 @@ type TlsSecureContextOptions f r =
 -- | `noDelay` <booean> If set to true, it disables the use of Nagle's algorithm immediately after a new incoming connection is received. Default: false.
 -- | `keepAlve` <boolean> If set to true, it enables keep-alive functionality on the socket immediately after a new incoming connection is received, similarly on what is done in socket.setKeepAlive([enable][, initialDelay]). Default: false.
 -- | `keepAlivInitialDelay` <number> If set to a positive number, it sets the initial delay before the first keepalive probe is sent on an idle socket.Default: 0.
-type NetCreateServerOptions :: forall k. (Type -> k) -> Row k -> Row k
+type NetCreateServerOptions :: (Type -> Type) -> Row Type -> Row Type
 type NetCreateServerOptions f r =
   ( allowHalfOpen :: f Boolean
   , pauseOnConnect :: f Boolean
@@ -288,7 +288,7 @@ foreign import connectAuthImpl :: EffectFn1 (String) (Http2Session Client)
 -- | `unknownProtocolTimeout` <number> Specifies a timeout in milliseconds that a server should wait when an 'unknownProtocol' event is emitted. If the socket has not been destroyed by that time the server will destroy it. Default: 10000.
 -- |
 -- | Note: `createConnection` is not supported for now.
-type ConnectOptions :: forall k. (Type -> k) -> Row k -> Row k
+type ConnectOptions :: (Type -> Type) -> Row Type -> Row Type
 type ConnectOptions f r =
   ( maxDeflateDynamicTableSize :: f Int
   , maxSettings :: f Int
@@ -359,7 +359,7 @@ getUnpackedSettings buf = runEffectFn1 getUnpackedSettingsImpl buf
 
 foreign import getUnpackedSettingsImpl :: EffectFn1 (ImmutableBuffer) (Settings)
 
-type Unlift :: forall k. k -> k
+type Unlift :: Type -> Type
 type Unlift a = a
 
 foreign import undefined :: forall a. a
