@@ -1,12 +1,12 @@
 name: CI
 
-# Run CI when a PR is opened against the branch `master`
-# and when one pushes a commit to `master`.
+# Run CI when a PR is opened against the branch `main`
+# and when one pushes a commit to `main`.
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 # Run CI on all 3 latest OSes
 jobs:
