@@ -5,8 +5,6 @@ import Prelude
 import Data.Array as Array
 import Data.FoldableWithIndex (forWithIndex_)
 import Effect (Effect)
-import Effect.Aff (Milliseconds(..), delay, launchAff_)
-import Effect.Class (liftEffect)
 import Effect.Class.Console (log)
 import Effect.Exception as Exception
 import Effect.Ref as Ref
