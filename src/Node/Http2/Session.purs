@@ -43,8 +43,8 @@ module Node.Http2.Session
   , onAltsvc
   , onOrigin
   , RequestOptions
-  , requestHeaders
-  , requestHeadersOptions
+  , request
+  , request'
   ) where
 
 import Prelude
@@ -314,12 +314,12 @@ type RequestOptions =
   , waitForTrailers :: Boolean
   }
 
-requestHeaders :: Http2Session Client -> Headers -> Effect (Http2Stream Client)
-requestHeaders s h = runEffectFn2 requestHeadersImpl s h
+request :: Http2Session Client -> Headers -> Effect (Http2Stream Client)
+request s h = runEffectFn2 requestHeadersImpl s h
 
 foreign import requestHeadersImpl :: EffectFn2 (Http2Session Client) (Headers) (Http2Stream Client)
 
-requestHeadersOptions :: Http2Session Client -> Headers -> RequestOptions -> Effect (Http2Stream Client)
-requestHeadersOptions c h o = runEffectFn3 requestHeadersOptionsImpl c h o
+request' :: Http2Session Client -> Headers -> RequestOptions -> Effect (Http2Stream Client)
+request' c h o = runEffectFn3 requestHeadersOptionsImpl c h o
 
 foreign import requestHeadersOptionsImpl :: EffectFn3 (Http2Session Client) (Headers) (RequestOptions) (Http2Stream Client)
