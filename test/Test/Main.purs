@@ -3,8 +3,7 @@ module Test.Main where
 import Prelude
 
 import Data.Array as Array
-import Data.FoldableWithIndex (forWithIndex_, traverseWithIndex_)
-import Data.Maybe (Maybe(..))
+import Data.FoldableWithIndex (forWithIndex_)
 import Effect (Effect)
 import Effect.Class.Console (log)
 import Effect.Exception as Exception
@@ -18,8 +17,9 @@ import Node.Http2.Client as Client
 import Node.Http2.Constants as NGHTTP2
 import Node.Http2.Server as Server
 import Node.Http2.Session as Session
-import Node.Http2.Stream (session, toDuplex)
+import Node.Http2.Stream (toDuplex)
 import Node.Http2.Stream as H2Stream
+import Node.Net.Server (onListening)
 import Node.Path as Path
 import Node.Stream as Stream
 import Unsafe.Coerce (unsafeCoerce)
@@ -32,11 +32,9 @@ main = do
   privateKey <- FS.readFile (Path.concat [ "test", "localhost-privkey.pem" ]) >>= unsafeToImmutableBuffer
   cert <- FS.readFile (Path.concat [ "test", "localhost-cert.pem" ]) >>= unsafeToImmutableBuffer
   server <- Server.createSecureServer
-    ( _
-        { key = Just [ privateKey ]
-        , cert = Just [ cert ]
-        }
-    )
+    { key: [ privateKey ]
+    , cert: [ cert ]
+    }
   Server.onCheckContinue server \req res -> do
     log "server - onCheckContinue"
   Server.onConnection server \duplex -> do
@@ -55,48 +53,54 @@ main = do
     log $ "server - onStream - Raw Headers: " <> show rawHeaders
     let duplex = H2Stream.toDuplex stream
     H2Stream.respond stream (unsafeCoerce { "an-http-header": "value" })
-      { endStream: true
+      { endStream: false
       , waitForTrailers: false
       }
-    void $ Stream.writeString duplex UTF8 "hello from server" (const mempty)
-    void $ Stream.end duplex \_ -> do
-      H2Stream.close stream NGHTTP2.noError
+    -- H2Stream.close stream NGHTTP2.noError
+    void $ Stream.writeString duplex UTF8 "hello from server" \err -> do
+      log (unsafeCoerce err)
+      void $ Stream.end duplex \_ -> do
+        log $ "server - onStream - closing for id: " <> show streamId
+        H2Stream.close stream NGHTTP2.noError
+        Server.close server
 
   Server.onTimeout server do
     log "onTimeout"
   Server.onUnknownProtocol server \duplex -> do
     log "onUnknownProtocol"
-  let httpsPort = 443
+  -- https://stackoverflow.com/a/63173619
+  -- "In UNIX-like systems, non-root users are unable to bind to ports lower than 1024."
+  let httpsPort = 8443
   Server.listen server
-    ( _
-        { port = Just httpsPort
-        }
-    )
-  session <- Client.connect' ("https://localhost:" <> show httpsPort)
-    (_ { ca = Just [ cert ] })
-  Session.onError session \error ->
-    log $ "Client session encountered error: " <> Exception.message error
-  stream <- Session.request session
-    ( unsafeCoerce
-        { ":method": "GET"
-        , ":path": "/"
-        }
-    )
-  let duplex = toDuplex stream
-  void $ Stream.end duplex (const mempty)
-  H2Stream.onResponse stream \headers flags -> do
-    log "client - onResponse"
-    forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
-      log $ k <> ": " <> v
-    log $ "Flags: " <> show flags
-    chunksRef <- Ref.new []
-    Stream.onData duplex \buf ->
-      Ref.modify_ (flip Array.snoc buf) chunksRef
-    Stream.onEnd duplex do
-      chunks <- Ref.read chunksRef
-      buffer <- Buffer.concat chunks :: Effect Buffer.Buffer
-      str <- Buffer.toString UTF8 buffer :: Effect String
-      log $ "client - onResponse body: " <> show str
-      H2Stream.close stream NGHTTP2.noError
+    { port: httpsPort
+    }
+  onListening (unsafeCoerce server) do
+    log "server listening"
+    session <- Client.connect' ("https://localhost:" <> show httpsPort)
+      { ca: [ cert ]
+      }
+    Session.onError session \error ->
+      log $ "Client session encountered error: " <> Exception.message error
+    stream <- Session.request session
+      ( unsafeCoerce
+          { ":method": "GET"
+          , ":path": "/"
+          }
+      )
+    let duplex = toDuplex stream
+    void $ Stream.end duplex (const mempty)
+    H2Stream.onResponse stream \headers flags -> do
+      log "client - onResponse"
+      forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
+        log $ k <> ": " <> v
+      log $ "Flags: " <> show flags
+      chunksRef <- Ref.new []
+      Stream.onData duplex \buf ->
+        Ref.modify_ (flip Array.snoc buf) chunksRef
+      Stream.onEnd duplex do
+        chunks <- Ref.read chunksRef
+        buffer <- Buffer.concat chunks :: Effect Buffer.Buffer
+        str <- Buffer.toString UTF8 buffer :: Effect String
+        log $ "client - onResponse body: " <> show str
+        H2Stream.close stream NGHTTP2.noError
 
-  Server.close server

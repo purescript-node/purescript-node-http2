@@ -20,13 +20,13 @@ module Node.Http2.Server
 
 import Prelude
 
-import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Time.Duration (Milliseconds)
 import Effect (Effect)
 import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn4, mkEffectFn1, mkEffectFn2, mkEffectFn4, runEffectFn1, runEffectFn2)
 import Node.Http2.Types (Headers, Http2SecureServer, Http2ServerRequest, Http2ServerResponse, Http2Session, Http2Stream, Server, Settings, TlsSecureContextOptions)
 import Node.Stream (Duplex)
+import Prim.Row as Row
 import Type.Row (type (+))
 
 -- | `allowHTTP1` <boolean> Incoming client connections that do not support HTTP/2 will be downgraded to HTTP/1.x when set to true. See the 'unknownProtocol' event. See ALPN negotiation. Default: false.
@@ -115,120 +115,13 @@ type NetCreateServerOptions f r =
 -- |   })
 -- | ```
 createSecureServer
-  :: ( { | Http2CreateSecureServerOptions Maybe + TlsCreateServerOptions Maybe + TlsSecureContextOptions Maybe + NetCreateServerOptions Maybe + () }
-       -> { | Http2CreateSecureServerOptions Maybe + TlsCreateServerOptions Maybe + TlsSecureContextOptions Maybe + NetCreateServerOptions Maybe + () }
-     )
+  :: forall rec trash
+   . Row.Union rec trash (Http2CreateSecureServerOptions Unlift + TlsCreateServerOptions Unlift + TlsSecureContextOptions Unlift + NetCreateServerOptions Unlift + ())
+  => { | rec }
   -> Effect Http2SecureServer
-createSecureServer buildOptions = do
-  let
-    o = buildOptions
-      { allowHTTP1: Nothing
-      , maxDeflateDynamicTableSize: Nothing
-      , maxSettings: Nothing
-      , maxSessionMemory: Nothing
-      , maxHeaderListPairs: Nothing
-      , maxOutstandingPings: Nothing
-      , maxSendHeaderBlockLength: Nothing
-      , paddingStrategy: Nothing
-      , peerMaxConcurrentStreams: Nothing
-      , maxSessionInvalidFrames: Nothing
-      , maxSessionRejectedStreams: Nothing
-      , settings: Nothing
-      , origins: Nothing
-      , unknownProtocolTimeout: Nothing
-      -- tls create server options
-      , "ALPNProtocols": Nothing
-      , enableTrace: Nothing
-      , handshakeTimeout: Nothing
-      , rejectUnauthorized: Nothing
-      , requestCert: Nothing
-      , pskIdentityHint: Nothing
-      -- tls secure context options
-      , ca: Nothing
-      , cert: Nothing
-      , sigalgs: Nothing
-      , ciphers: Nothing
-      , clientCertEngine: Nothing
-      , crl: Nothing
-      , dhparam: Nothing
-      , ecdhCurve: Nothing
-      , honorCipherOrder: Nothing
-      , key: Nothing
-      , privateKeyEngine: Nothing
-      , privateKeyIdentifier: Nothing
-      , maxVersion: Nothing
-      , minVersion: Nothing
-      , passphrase: Nothing
-      , pfx: Nothing
-      , secureOptions: Nothing
-      , secureProtocol: Nothing
-      , sessionIdContext: Nothing
-      , ticketKeys: Nothing
-      , sessionTimeout: Nothing
-      -- net create server options
-      , allowHalfOpen: Nothing
-      , pauseOnConnect: Nothing
-      , noDelay: Nothing
-      , keepAlive: Nothing
-      , keepAliveInitialDelay: Nothing
-      }
+createSecureServer options = runEffectFn1 createSecureServerImpl options
 
-    options' :: { | Http2CreateSecureServerOptions Unlift + TlsCreateServerOptions Unlift + TlsSecureContextOptions Unlift + NetCreateServerOptions Unlift + () }
-    options' =
-      -- Http2
-      { allowHTTP1: fromMaybe undefined o.allowHTTP1
-      , maxDeflateDynamicTableSize: fromMaybe undefined o.maxDeflateDynamicTableSize
-      , maxSettings: fromMaybe undefined o.maxSettings
-      , maxSessionMemory: fromMaybe undefined o.maxSessionMemory
-      , maxHeaderListPairs: fromMaybe undefined o.maxHeaderListPairs
-      , maxOutstandingPings: fromMaybe undefined o.maxOutstandingPings
-      , maxSendHeaderBlockLength: fromMaybe undefined o.maxSendHeaderBlockLength
-      , paddingStrategy: fromMaybe undefined o.paddingStrategy
-      , peerMaxConcurrentStreams: fromMaybe undefined o.peerMaxConcurrentStreams
-      , maxSessionInvalidFrames: fromMaybe undefined o.maxSessionInvalidFrames
-      , maxSessionRejectedStreams: fromMaybe undefined o.maxSessionRejectedStreams
-      , settings: fromMaybe undefined o.settings
-      , origins: fromMaybe undefined o.origins
-      , unknownProtocolTimeout: fromMaybe undefined o.unknownProtocolTimeout
-      -- tls create server options
-      , "ALPNProtocols": fromMaybe undefined o."ALPNProtocols"
-      , enableTrace: fromMaybe undefined o.enableTrace
-      , handshakeTimeout: fromMaybe undefined o.handshakeTimeout
-      , rejectUnauthorized: fromMaybe undefined o.rejectUnauthorized
-      , requestCert: fromMaybe undefined o.requestCert
-      , pskIdentityHint: fromMaybe undefined o.pskIdentityHint
-      -- tls secure context options
-      , ca: fromMaybe undefined o.ca
-      , cert: fromMaybe undefined o.cert
-      , sigalgs: fromMaybe undefined o.sigalgs
-      , ciphers: fromMaybe undefined o.ciphers
-      , clientCertEngine: fromMaybe undefined o.clientCertEngine
-      , crl: fromMaybe undefined o.crl
-      , dhparam: fromMaybe undefined o.dhparam
-      , ecdhCurve: fromMaybe undefined o.ecdhCurve
-      , honorCipherOrder: fromMaybe undefined o.honorCipherOrder
-      , key: fromMaybe undefined o.key
-      , privateKeyEngine: fromMaybe undefined o.privateKeyEngine
-      , privateKeyIdentifier: fromMaybe undefined o.privateKeyIdentifier
-      , maxVersion: fromMaybe undefined o.maxVersion
-      , minVersion: fromMaybe undefined o.minVersion
-      , passphrase: fromMaybe undefined o.passphrase
-      , pfx: fromMaybe undefined o.pfx
-      , secureOptions: fromMaybe undefined o.secureOptions
-      , secureProtocol: fromMaybe undefined o.secureProtocol
-      , sessionIdContext: fromMaybe undefined o.sessionIdContext
-      , ticketKeys: fromMaybe undefined o.ticketKeys
-      , sessionTimeout: fromMaybe undefined o.sessionTimeout
-      -- net create server options
-      , allowHalfOpen: fromMaybe undefined o.allowHalfOpen
-      , pauseOnConnect: fromMaybe undefined o.pauseOnConnect
-      , noDelay: fromMaybe undefined o.noDelay
-      , keepAlive: fromMaybe undefined o.keepAlive
-      , keepAliveInitialDelay: fromMaybe undefined o.keepAliveInitialDelay
-      }
-  runEffectFn1 createSecureServerImpl options'
-
-foreign import createSecureServerImpl :: EffectFn1 { | Http2CreateSecureServerOptions Unlift + TlsCreateServerOptions Unlift + TlsSecureContextOptions Unlift + NetCreateServerOptions Unlift + () } (Http2SecureServer)
+foreign import createSecureServerImpl :: forall r. EffectFn1 { | r } (Http2SecureServer)
 
 -- | `port` <number>
 -- | `host` <string>
@@ -238,42 +131,26 @@ foreign import createSecureServerImpl :: EffectFn1 { | Http2CreateSecureServerOp
 -- | `readableAll` <boolean> For IPC servers makes the pipe readable for all users. Default: false.
 -- | `writableAll` <boolean> For IPC servers makes the pipe writable for all users. Default: false.
 -- | `ipv6Only` <boolean> For TCP servers, setting ipv6Only to true will disable dual-stack support, i.e., binding to host :: won't make 0.0.0.0 be bound. Default: false.
-type ListenOptions f =
-  { port :: f Int
-  , host :: f String
-  , backlog :: f Number
-  , exclusive :: f Boolean
-  , readableAll :: f Boolean
-  , writableAll :: f Boolean
-  , ipv6Only :: f Boolean
-  }
+type ListenOptions r =
+  ( port :: Int
+  , host :: String
+  , backlog :: Number
+  , exclusive :: Boolean
+  , readableAll :: Boolean
+  , writableAll :: Boolean
+  , ipv6Only :: Boolean
+  | r
+  )
 
-listen :: Http2SecureServer -> (ListenOptions Maybe -> ListenOptions Maybe) -> Effect Unit
-listen s buildOptions = do
-  let
-    o = buildOptions
-      { port: Nothing
-      , host: Nothing
-      , backlog: Nothing
-      , exclusive: Nothing
-      , readableAll: Nothing
-      , writableAll: Nothing
-      , ipv6Only: Nothing
-      }
+listen
+  :: forall r trash
+   . Row.Union r trash (ListenOptions + ())
+  => Http2SecureServer
+  -> { | r }
+  -> Effect Unit
+listen s o = runEffectFn2 listenImpl s o
 
-    finalOptions :: ListenOptions Unlift
-    finalOptions =
-      { port: fromMaybe undefined o.port
-      , host: fromMaybe undefined o.host
-      , backlog: fromMaybe undefined o.backlog
-      , exclusive: fromMaybe undefined o.exclusive
-      , readableAll: fromMaybe undefined o.readableAll
-      , writableAll: fromMaybe undefined o.writableAll
-      , ipv6Only: fromMaybe undefined o.ipv6Only
-      }
-  runEffectFn2 listenImpl s finalOptions
-
-foreign import listenImpl :: EffectFn2 (Http2SecureServer) (ListenOptions Unlift) (Unit)
+foreign import listenImpl :: forall r. EffectFn2 (Http2SecureServer) { | r } (Unit)
 
 type Unlift :: Type -> Type
 type Unlift a = a
