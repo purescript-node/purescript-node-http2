@@ -38,7 +38,8 @@ module Node.Http2.Session
   , state
   , type_
   , unref
-  , altsvc
+  , altsvcStreamId
+  , altsvcOrigin
   , origin
   , onAltsvc
   , onOrigin
@@ -49,7 +50,6 @@ module Node.Http2.Session
 
 import Prelude
 
-import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn1, runFn1)
 import Data.Maybe (Maybe, fromMaybe)
 import Data.Nullable (Nullable, toMaybe)
@@ -276,12 +276,14 @@ unref s = runEffectFn1 unrefImpl s
 
 foreign import unrefImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
 
-altsvc :: Http2Session Server -> String -> Either Int String -> Effect Unit
-altsvc s alt originOrStream = case originOrStream of
-  Left streamId -> runEffectFn3 altsvcStreamImpl s alt streamId
-  Right origin' -> runEffectFn3 altsvcOriginImpl s alt origin'
+altsvcStreamId :: Http2Session Server -> String -> Int -> Effect Unit
+altsvcStreamId s alt streamId = runEffectFn3 altsvcStreamImpl s alt streamId
 
 foreign import altsvcStreamImpl :: EffectFn3 (Http2Session Server) (String) Int (Unit)
+
+altsvcOrigin :: Http2Session Server -> String -> String -> Effect Unit
+altsvcOrigin s alt origin' = runEffectFn3 altsvcOriginImpl s alt origin'
+
 foreign import altsvcOriginImpl :: EffectFn3 (Http2Session Server) (String) String (Unit)
 
 origin :: Http2Session Server -> Array String -> Effect Unit
