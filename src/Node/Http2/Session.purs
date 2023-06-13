@@ -1,4 +1,51 @@
-module Node.Http2.Session where
+module Node.Http2.Session
+  ( onClose
+  , onConnect
+  , onError
+  , onFrameError
+  , onGoAway
+  , onLocalSettings
+  , onPing
+  , onRemoteSettings
+  , onStream
+  , onTimeout
+  , alpnProtocol
+  , close
+  , closed
+  , connecting
+  , destroy
+  , destroyWithError
+  , destroyWithCode
+  , destroyWithErrorCode
+  , destroyed
+  , encrypted
+  , goAway
+  , goAwayCode
+  , goAwayCodeLastStreamId
+  , goAwayCodeLastStreamIdData
+  , localSettings
+  , originSet
+  , pendingSettingsAck
+  , ping
+  , pingPayload
+  , ref
+  , remoteSettings
+  , setLocalWindowSize
+  , setTimeout
+  , settings
+  , socket
+  , Http2SessionState
+  , state
+  , type_
+  , unref
+  , altsvc
+  , origin
+  , onAltsvc
+  , onOrigin
+  , RequestOptions
+  , requestHeaders
+  , requestHeadersOptions
+  ) where
 
 import Prelude
 

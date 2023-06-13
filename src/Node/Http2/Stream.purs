@@ -1,4 +1,47 @@
-module Node.Http2.Stream where
+module Node.Http2.Stream
+  ( onAbort
+  , onClose
+  , onError
+  , onFrameError
+  , onReady
+  , onTimeout
+  , onTrailers
+  , onWantTrailers
+  , bufferSize
+  , close
+  , closed
+  , destroyed
+  , endAfterHeaders
+  , id
+  , pending
+  , PriorityOptions
+  , priority
+  , rstCode
+  , sentHeaders
+  , sentInfoHeaders
+  , sentTrailers
+  , session
+  , setTimeout
+  , Http2StreamState
+  , state
+  , sendTrailers
+  , additionalHeaders
+  , headersSent
+  , pushAllowed
+  , PushStreamOptions
+  , pushStream
+  , pushStream'
+  , RespondOptions
+  , respond
+  , RespondWithFdOptions
+  , respondWithFd
+  , RespondWithFileOptions
+  , respondWithFile
+  , onContinue
+  , onHeaders
+  , onPush
+  , onResponse
+  ) where
 
 import Prelude
 

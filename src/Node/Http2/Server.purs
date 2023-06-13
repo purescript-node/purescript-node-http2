@@ -1,4 +1,17 @@
-module Node.Http2.Server where
+module Node.Http2.Server
+  ( onCheckContinue
+  , onConnection
+  , onRequest
+  , onSession
+  , onSessionError
+  , onStream
+  , onTimeout
+  , onUnknownProtocol
+  , close
+  , setTimeout
+  , timeout
+  , updateSettings
+  ) where
 
 import Prelude
 
