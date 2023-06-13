@@ -5,6 +5,8 @@ import Prelude
 import Data.Array as Array
 import Data.FoldableWithIndex (forWithIndex_)
 import Effect (Effect)
+import Effect.Aff (Milliseconds(..), delay, launchAff_)
+import Effect.Class (liftEffect)
 import Effect.Class.Console (log)
 import Effect.Exception as Exception
 import Effect.Ref as Ref
@@ -62,7 +64,6 @@ main = do
       void $ Stream.end duplex \_ -> do
         log $ "server - onStream - closing for id: " <> show streamId
         H2Stream.close stream NGHTTP2.noError
-        Server.close server
 
   Server.onTimeout server do
     log "onTimeout"
@@ -103,4 +104,6 @@ main = do
         str <- Buffer.toString UTF8 buffer :: Effect String
         log $ "client - onResponse body: " <> show str
         H2Stream.close stream NGHTTP2.noError
+        Session.destroy session
+        Server.close server
 
