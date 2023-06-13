@@ -1,3 +1,11 @@
+import http2 from "node:http2";
+
+export const createSecureServerImpl = (opts) => http2.createSecureServer(opts);
+export const listenImpl = (s, o) => s.listen(o);
+
+const undefined_ = undefined;
+export { undefined_ as undefined }
+
 export const onCheckContinueImpl = (s, cb) => s.on("checkContinue", cb);
 export const onConnectionImpl = (s, cb) => s.on("connection", cb);
 export const onRequestImpl = (s, cb) => s.on("request", cb);
