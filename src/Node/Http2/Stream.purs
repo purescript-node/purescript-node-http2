@@ -1,5 +1,6 @@
 module Node.Http2.Stream
-  ( onAbort
+  ( toDuplex
+  , onAbort
   , onClose
   , onError
   , onFrameError
@@ -55,7 +56,12 @@ import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn1
 import Node.FS (FileDescriptor)
 import Node.Http2.Types (Client, Headers, Http2Session, Http2Stream, Server)
 import Node.Path (FilePath)
+import Node.Stream (Duplex)
 import Partial.Unsafe (unsafeCrashWith)
+import Unsafe.Coerce (unsafeCoerce)
+
+toDuplex :: forall peer. Http2Stream peer -> Duplex
+toDuplex = unsafeCoerce
 
 onAbort :: forall peer. Http2Stream peer -> Effect Unit -> Effect Unit
 onAbort s cb = runEffectFn2 onAbortImpl s cb
