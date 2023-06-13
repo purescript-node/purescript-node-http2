@@ -6,14 +6,14 @@ import Node.Buffer.Immutable (ImmutableBuffer)
 
 -- | Type-level tag that indicates whether the stream/session/etc.
 -- | is a server or client one.
-data PeerType
+data Endpoint
 
-foreign import data Client :: PeerType
-foreign import data Server :: PeerType
+foreign import data Client :: Endpoint
+foreign import data Server :: Endpoint
 
-foreign import data Http2Session :: PeerType -> Type
+foreign import data Http2Session :: Endpoint -> Type
 
-foreign import data Http2Stream :: PeerType -> Type
+foreign import data Http2Stream :: Endpoint -> Type
 
 foreign import data Headers :: Type
 

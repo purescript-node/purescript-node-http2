@@ -60,83 +60,83 @@ import Node.Stream (Duplex)
 import Partial.Unsafe (unsafeCrashWith)
 import Unsafe.Coerce (unsafeCoerce)
 
-toDuplex :: forall peer. Http2Stream peer -> Duplex
+toDuplex :: forall endpoint. Http2Stream endpoint -> Duplex
 toDuplex = unsafeCoerce
 
-onAbort :: forall peer. Http2Stream peer -> Effect Unit -> Effect Unit
+onAbort :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
 onAbort s cb = runEffectFn2 onAbortImpl s cb
 
-foreign import onAbortImpl :: forall peer. EffectFn2 (Http2Stream peer) (Effect Unit) Unit
+foreign import onAbortImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) Unit
 
-onClose :: forall peer. Http2Stream peer -> Effect Unit -> Effect Unit
+onClose :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
 onClose s cb = runEffectFn2 onCloseImpl s cb
 
-foreign import onCloseImpl :: forall peer. EffectFn2 (Http2Stream peer) (Effect Unit) (Unit)
+foreign import onCloseImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
 
-onError :: forall peer. Http2Stream peer -> (Error -> Effect Unit) -> Effect Unit
+onError :: forall endpoint. Http2Stream endpoint -> (Error -> Effect Unit) -> Effect Unit
 onError s cb = runEffectFn2 onErrorImpl s $ mkEffectFn1 cb
 
-foreign import onErrorImpl :: forall peer. EffectFn2 (Http2Stream peer) (EffectFn1 Error Unit) (Unit)
+foreign import onErrorImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (EffectFn1 Error Unit) (Unit)
 
-onFrameError :: forall peer. Http2Stream peer -> (Int -> Int -> Int -> Effect Unit) -> Effect Unit
+onFrameError :: forall endpoint. Http2Stream endpoint -> (Int -> Int -> Int -> Effect Unit) -> Effect Unit
 onFrameError s cb = runEffectFn2 onFrameErrorImpl s $ mkEffectFn3 cb
 
-foreign import onFrameErrorImpl :: forall peer. EffectFn2 (Http2Stream peer) (EffectFn3 Int Int Int Unit) (Unit)
+foreign import onFrameErrorImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (EffectFn3 Int Int Int Unit) (Unit)
 
-onReady :: forall peer. Http2Stream peer -> Effect Unit -> Effect Unit
+onReady :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
 onReady s cb = runEffectFn2 onReadyImpl s cb
 
-foreign import onReadyImpl :: forall peer. EffectFn2 (Http2Stream peer) (Effect Unit) (Unit)
+foreign import onReadyImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
 
-onTimeout :: forall peer. Http2Stream peer -> Effect Unit -> Effect Unit
+onTimeout :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
 onTimeout s cb = runEffectFn2 onTimeoutImpl s cb
 
-foreign import onTimeoutImpl :: forall peer. EffectFn2 (Http2Stream peer) (Effect Unit) (Unit)
+foreign import onTimeoutImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
 
-onTrailers :: forall peer. Http2Stream peer -> (Headers -> Int -> Effect Unit) -> Effect Unit
+onTrailers :: forall endpoint. Http2Stream endpoint -> (Headers -> Int -> Effect Unit) -> Effect Unit
 onTrailers s cb = runEffectFn2 onTrailersImpl s $ mkEffectFn2 cb
 
-foreign import onTrailersImpl :: forall peer. EffectFn2 (Http2Stream peer) (EffectFn2 Headers Int Unit) (Unit)
+foreign import onTrailersImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (EffectFn2 Headers Int Unit) (Unit)
 
-onWantTrailers :: forall peer. Http2Stream peer -> Effect Unit -> Effect Unit
+onWantTrailers :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
 onWantTrailers s cb = runEffectFn2 onWantTrailersImpl s cb
 
-foreign import onWantTrailersImpl :: forall peer. EffectFn2 (Http2Stream peer) (Effect Unit) (Unit)
+foreign import onWantTrailersImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
 
-bufferSize :: forall peer. Http2Stream peer -> Effect Int
+bufferSize :: forall endpoint. Http2Stream endpoint -> Effect Int
 bufferSize s = runEffectFn1 bufferSizeImpl s
 
-foreign import bufferSizeImpl :: forall peer. EffectFn1 (Http2Stream peer) (Int)
+foreign import bufferSizeImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Int)
 
-close :: forall peer. Http2Stream peer -> Int -> Effect Unit
+close :: forall endpoint. Http2Stream endpoint -> Int -> Effect Unit
 close s code = runEffectFn2 closeImpl s code
 
-foreign import closeImpl :: forall peer. EffectFn2 (Http2Stream peer) Int (Unit)
+foreign import closeImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) Int (Unit)
 
-closed :: forall peer. Http2Stream peer -> Effect Boolean
+closed :: forall endpoint. Http2Stream endpoint -> Effect Boolean
 closed s = runEffectFn1 closedImpl s
 
-foreign import closedImpl :: forall peer. EffectFn1 (Http2Stream peer) (Boolean)
+foreign import closedImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Boolean)
 
-destroyed :: forall peer. Http2Stream peer -> Effect Boolean
+destroyed :: forall endpoint. Http2Stream endpoint -> Effect Boolean
 destroyed s = runEffectFn1 destroyedImpl s
 
-foreign import destroyedImpl :: forall peer. EffectFn1 (Http2Stream peer) (Boolean)
+foreign import destroyedImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Boolean)
 
-endAfterHeaders :: forall peer. Http2Stream peer -> Effect Boolean
+endAfterHeaders :: forall endpoint. Http2Stream endpoint -> Effect Boolean
 endAfterHeaders s = runEffectFn1 endAfterHeadersImpl s
 
-foreign import endAfterHeadersImpl :: forall peer. EffectFn1 (Http2Stream peer) (Boolean)
+foreign import endAfterHeadersImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Boolean)
 
-id :: forall peer. Http2Stream peer -> Effect (Maybe Int)
+id :: forall endpoint. Http2Stream endpoint -> Effect (Maybe Int)
 id s = map toMaybe $ runEffectFn1 idImpl s
 
-foreign import idImpl :: forall peer. EffectFn1 (Http2Stream peer) (Nullable Int)
+foreign import idImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Nullable Int)
 
-pending :: forall peer. Http2Stream peer -> Effect Boolean
+pending :: forall endpoint. Http2Stream endpoint -> Effect Boolean
 pending s = runEffectFn1 pendingImpl s
 
-foreign import pendingImpl :: forall peer. EffectFn1 (Http2Stream peer) (Boolean)
+foreign import pendingImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Boolean)
 
 -- | `exclusive` <boolean> When true and parent identifies a parent Stream, this stream is made the sole direct dependency of the parent, with all other existing dependents made a dependent of this stream. Default: false.
 -- | `parent` <number> Specifies the numeric identifier of a stream this stream is dependent on.
@@ -150,40 +150,40 @@ type PriorityOptions =
   }
 
 -- | Note: clamping the `weight` value is done automatically.
-priority :: forall peer. Http2Stream peer -> PriorityOptions -> Effect Unit
+priority :: forall endpoint. Http2Stream endpoint -> PriorityOptions -> Effect Unit
 priority s p = runEffectFn2 priorityImpl s $ p { weight = clamp 1 256 p.weight }
 
-foreign import priorityImpl :: forall peer. EffectFn2 (Http2Stream peer) (PriorityOptions) (Unit)
+foreign import priorityImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (PriorityOptions) (Unit)
 
-rstCode :: forall peer. Http2Stream peer -> Effect (Maybe Int)
+rstCode :: forall endpoint. Http2Stream endpoint -> Effect (Maybe Int)
 rstCode s = map toMaybe $ runEffectFn1 rstCodeImpl s
 
-foreign import rstCodeImpl :: forall peer. EffectFn1 (Http2Stream peer) (Nullable Int)
+foreign import rstCodeImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Nullable Int)
 
-sentHeaders :: forall peer. Http2Stream peer -> Effect Headers
+sentHeaders :: forall endpoint. Http2Stream endpoint -> Effect Headers
 sentHeaders s = runEffectFn1 sentHeadersImpl s
 
-foreign import sentHeadersImpl :: forall peer. EffectFn1 (Http2Stream peer) (Headers)
+foreign import sentHeadersImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Headers)
 
-sentInfoHeaders :: forall peer. Http2Stream peer -> Effect (Array Headers)
+sentInfoHeaders :: forall endpoint. Http2Stream endpoint -> Effect (Array Headers)
 sentInfoHeaders s = runEffectFn1 sentInfoHeadersImpl s
 
-foreign import sentInfoHeadersImpl :: forall peer. EffectFn1 (Http2Stream peer) (Array Headers)
+foreign import sentInfoHeadersImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Array Headers)
 
-sentTrailers :: forall peer. Http2Stream peer -> Effect Headers
+sentTrailers :: forall endpoint. Http2Stream endpoint -> Effect Headers
 sentTrailers s = runEffectFn1 sentTrailersImpl s
 
-foreign import sentTrailersImpl :: forall peer. EffectFn1 (Http2Stream peer) (Headers)
+foreign import sentTrailersImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Headers)
 
-session :: forall peer. Http2Stream peer -> Effect (Maybe (Http2Session peer))
+session :: forall endpoint. Http2Stream endpoint -> Effect (Maybe (Http2Session endpoint))
 session s = map toMaybe $ runEffectFn1 sessionImpl s
 
-foreign import sessionImpl :: forall peer. EffectFn1 (Http2Stream peer) (Nullable (Http2Session peer))
+foreign import sessionImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Nullable (Http2Session endpoint))
 
-setTimeout :: forall peer. Http2Stream peer -> Milliseconds -> Effect Unit -> Effect Unit
+setTimeout :: forall endpoint. Http2Stream endpoint -> Milliseconds -> Effect Unit -> Effect Unit
 setTimeout s msecs cb = runEffectFn3 setTimeoutImpl s msecs cb
 
-foreign import setTimeoutImpl :: forall peer. EffectFn3 (Http2Stream peer) (Milliseconds) (Effect Unit) (Unit)
+foreign import setTimeoutImpl :: forall endpoint. EffectFn3 (Http2Stream endpoint) (Milliseconds) (Effect Unit) (Unit)
 
 -- | `localWindowSize` <number> The number of bytes the connected peer may send for this Http2Stream peer without receiving a WINDOW_UPDATE.
 -- | `state` <number> A flag indicating the low-level current state of the Http2Stream peer as determined by nghttp2.
@@ -200,15 +200,15 @@ type Http2StreamState =
   , weight :: Int
   }
 
-state :: forall peer. Http2Stream peer -> Effect Http2StreamState
+state :: forall endpoint. Http2Stream endpoint -> Effect Http2StreamState
 state s = runEffectFn1 stateImpl s
 
-foreign import stateImpl :: forall peer. EffectFn1 (Http2Stream peer) (Http2StreamState)
+foreign import stateImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Http2StreamState)
 
-sendTrailers :: forall peer. Http2Stream peer -> Headers -> Effect Unit
+sendTrailers :: forall endpoint. Http2Stream endpoint -> Headers -> Effect Unit
 sendTrailers s t = runEffectFn2 sendTrailersImpl s t
 
-foreign import sendTrailersImpl :: forall peer. EffectFn2 (Http2Stream peer) (Headers) (Unit)
+foreign import sendTrailersImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Headers) (Unit)
 
 additionalHeaders :: Http2Stream Server -> Headers -> Effect Unit
 additionalHeaders s h = runEffectFn2 additionalHeadersImpl s h

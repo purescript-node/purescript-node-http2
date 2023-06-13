@@ -61,184 +61,184 @@ import Node.Buffer.Immutable (ImmutableBuffer)
 import Node.Http2.Types (Client, Headers, Http2Session, Http2Stream, Server, Settings)
 import Node.Net.Socket (Socket)
 
-onClose :: forall peer. Http2Session peer -> Effect Unit -> Effect Unit
+onClose :: forall endpoint. Http2Session endpoint -> Effect Unit -> Effect Unit
 onClose session cb = runEffectFn2 onCloseImpl session cb
 
-foreign import onCloseImpl :: forall peer. EffectFn2 (Http2Session peer) (Effect Unit) Unit
+foreign import onCloseImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Effect Unit) Unit
 
-onConnect :: forall peer. Http2Session peer -> (Http2Session peer -> Socket -> Effect Unit) -> Effect Unit
+onConnect :: forall endpoint. Http2Session endpoint -> (Http2Session endpoint -> Socket -> Effect Unit) -> Effect Unit
 onConnect h2s cb = runEffectFn2 onConnectImpl h2s $ mkEffectFn2 cb
 
-foreign import onConnectImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn2 (Http2Session peer) Socket Unit) Unit
+foreign import onConnectImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn2 (Http2Session endpoint) Socket Unit) Unit
 
-onError :: forall peer. Http2Session peer -> (Error -> Effect Unit) -> Effect Unit
+onError :: forall endpoint. Http2Session endpoint -> (Error -> Effect Unit) -> Effect Unit
 onError session cb = runEffectFn2 onErrorImpl session $ mkEffectFn1 cb
 
-foreign import onErrorImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn1 Error Unit) (Unit)
+foreign import onErrorImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 Error Unit) (Unit)
 
-onFrameError :: forall peer. Http2Session peer -> (Int -> Int -> Int -> Effect Unit) -> Effect Unit
+onFrameError :: forall endpoint. Http2Session endpoint -> (Int -> Int -> Int -> Effect Unit) -> Effect Unit
 onFrameError session cb = runEffectFn2 onFrameErrorImpl session $ mkEffectFn3 cb
 
-foreign import onFrameErrorImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn3 Int Int Int Unit) (Unit)
+foreign import onFrameErrorImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 Int Int Int Unit) (Unit)
 
-onGoAway :: forall peer. Http2Session peer -> (Int -> Int -> Maybe ImmutableBuffer -> Effect Unit) -> Effect Unit
+onGoAway :: forall endpoint. Http2Session endpoint -> (Int -> Int -> Maybe ImmutableBuffer -> Effect Unit) -> Effect Unit
 onGoAway session cb = runEffectFn2 onGoAwayImpl session $ mkEffectFn3 \c lsi buf ->
   cb c lsi (toMaybe buf)
 
-foreign import onGoAwayImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn3 Int Int (Nullable ImmutableBuffer) Unit) (Unit)
+foreign import onGoAwayImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 Int Int (Nullable ImmutableBuffer) Unit) (Unit)
 
-onLocalSettings :: forall peer. Http2Session peer -> (Settings -> Effect Unit) -> Effect Unit
+onLocalSettings :: forall endpoint. Http2Session endpoint -> (Settings -> Effect Unit) -> Effect Unit
 onLocalSettings session cb = runEffectFn2 onLocalSettingsImpl session $ mkEffectFn1 cb
 
-foreign import onLocalSettingsImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn1 Settings Unit) (Unit)
+foreign import onLocalSettingsImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 Settings Unit) (Unit)
 
-onPing :: forall peer. Http2Session peer -> (Maybe ImmutableBuffer -> Effect Unit) -> Effect Unit
+onPing :: forall endpoint. Http2Session endpoint -> (Maybe ImmutableBuffer -> Effect Unit) -> Effect Unit
 onPing sesson cb = runEffectFn2 onPingImpl sesson $ mkEffectFn1 \a -> cb $ toMaybe a
 
-foreign import onPingImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn1 (Nullable ImmutableBuffer) Unit) (Unit)
+foreign import onPingImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 (Nullable ImmutableBuffer) Unit) (Unit)
 
-onRemoteSettings :: forall peer. Http2Session peer -> (Settings -> Effect Unit) -> Effect Unit
+onRemoteSettings :: forall endpoint. Http2Session endpoint -> (Settings -> Effect Unit) -> Effect Unit
 onRemoteSettings session cb = runEffectFn2 onRemoteSettingsImpl session $ mkEffectFn1 cb
 
-foreign import onRemoteSettingsImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn1 Settings Unit) (Unit)
+foreign import onRemoteSettingsImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 Settings Unit) (Unit)
 
-onStream :: forall peer. Http2Session peer -> (Http2Stream peer -> Headers -> Number -> (Array String) -> Effect Unit) -> Effect Unit
+onStream :: forall endpoint. Http2Session endpoint -> (Http2Stream endpoint -> Headers -> Number -> (Array String) -> Effect Unit) -> Effect Unit
 onStream session cb = runEffectFn2 onStreamImpl session $ mkEffectFn4 cb
 
-foreign import onStreamImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn4 (Http2Stream peer) Headers Number (Array String) Unit) (Unit)
+foreign import onStreamImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn4 (Http2Stream endpoint) Headers Number (Array String) Unit) (Unit)
 
-onTimeout :: forall peer. Http2Session peer -> Effect Unit -> Effect Unit
+onTimeout :: forall endpoint. Http2Session endpoint -> Effect Unit -> Effect Unit
 onTimeout session cb = runEffectFn2 onTimeoutImpl session cb
 
-foreign import onTimeoutImpl :: forall peer. EffectFn2 (Http2Session peer) (Effect Unit) (Unit)
+foreign import onTimeoutImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Effect Unit) (Unit)
 
-alpnProtocol :: forall peer. Http2Session peer -> Effect (Maybe String)
+alpnProtocol :: forall endpoint. Http2Session endpoint -> Effect (Maybe String)
 alpnProtocol session = map toMaybe $ runEffectFn1 alpnProtocolImpl session
 
-foreign import alpnProtocolImpl :: forall peer. EffectFn1 (Http2Session peer) (Nullable String)
+foreign import alpnProtocolImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Nullable String)
 
-close :: forall peer. Http2Session peer -> Effect Unit
+close :: forall endpoint. Http2Session endpoint -> Effect Unit
 close session = runEffectFn1 closeImpl session
 
-foreign import closeImpl :: forall peer. EffectFn1 (Http2Session peer) (Unit)
+foreign import closeImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Unit)
 
-closed :: forall peer. Http2Session peer -> Effect Boolean
+closed :: forall endpoint. Http2Session endpoint -> Effect Boolean
 closed session = runEffectFn1 closedImpl session
 
-foreign import closedImpl :: forall peer. EffectFn1 (Http2Session peer) (Boolean)
+foreign import closedImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Boolean)
 
-connecting :: forall peer. Http2Session peer -> Effect Boolean
+connecting :: forall endpoint. Http2Session endpoint -> Effect Boolean
 connecting session = runEffectFn1 connectingImpl session
 
-foreign import connectingImpl :: forall peer. EffectFn1 (Http2Session peer) (Boolean)
+foreign import connectingImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Boolean)
 
-destroy :: forall peer. Http2Session peer -> Effect Unit
+destroy :: forall endpoint. Http2Session endpoint -> Effect Unit
 destroy session = runEffectFn1 destroyImpl session
 
-foreign import destroyImpl :: forall peer. EffectFn1 (Http2Session peer) (Unit)
+foreign import destroyImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Unit)
 
-destroyWithError :: forall peer. Http2Session peer -> Error -> Effect Unit
+destroyWithError :: forall endpoint. Http2Session endpoint -> Error -> Effect Unit
 destroyWithError s e = runEffectFn2 destroyWithErrorImpl s e
 
-foreign import destroyWithErrorImpl :: forall peer. EffectFn2 (Http2Session peer) (Error) (Unit)
+foreign import destroyWithErrorImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Error) (Unit)
 
-destroyWithCode :: forall peer. Http2Session peer -> Int -> Effect Unit
+destroyWithCode :: forall endpoint. Http2Session endpoint -> Int -> Effect Unit
 destroyWithCode s c = runEffectFn2 destroyWithCodeImpl s c
 
-foreign import destroyWithCodeImpl :: forall peer. EffectFn2 (Http2Session peer) (Int) (Unit)
+foreign import destroyWithCodeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Int) (Unit)
 
-destroyWithErrorCode :: forall peer. Http2Session peer -> Error -> Int -> Effect Unit
+destroyWithErrorCode :: forall endpoint. Http2Session endpoint -> Error -> Int -> Effect Unit
 destroyWithErrorCode s e c = runEffectFn3 destroyWithErrorCodeImpl s e c
 
-foreign import destroyWithErrorCodeImpl :: forall peer. EffectFn3 (Http2Session peer) (Error) (Int) (Unit)
+foreign import destroyWithErrorCodeImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Error) (Int) (Unit)
 
-destroyed :: forall peer. Http2Session peer -> Effect Boolean
+destroyed :: forall endpoint. Http2Session endpoint -> Effect Boolean
 destroyed s = runEffectFn1 destroyedImpl s
 
-foreign import destroyedImpl :: forall peer. EffectFn1 (Http2Session peer) (Boolean)
+foreign import destroyedImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Boolean)
 
-encrypted :: forall peer. Http2Session peer -> Effect (Maybe Boolean)
+encrypted :: forall endpoint. Http2Session endpoint -> Effect (Maybe Boolean)
 encrypted s = map toMaybe $ runEffectFn1 encryptedImpl s
 
-foreign import encryptedImpl :: forall peer. EffectFn1 (Http2Session peer) (Nullable Boolean)
+foreign import encryptedImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Nullable Boolean)
 
-goAway :: forall peer. Http2Session peer -> Effect Unit
+goAway :: forall endpoint. Http2Session endpoint -> Effect Unit
 goAway s = runEffectFn1 goAwayImpl s
 
-foreign import goAwayImpl :: forall peer. EffectFn1 (Http2Session peer) (Unit)
+foreign import goAwayImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Unit)
 
-goAwayCode :: forall peer. Http2Session peer -> Int -> Effect Unit
+goAwayCode :: forall endpoint. Http2Session endpoint -> Int -> Effect Unit
 goAwayCode s c = runEffectFn2 goAwayCodeImpl s c
 
-foreign import goAwayCodeImpl :: forall peer. EffectFn2 (Http2Session peer) (Int) (Unit)
+foreign import goAwayCodeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Int) (Unit)
 
-goAwayCodeLastStreamId :: forall peer. Http2Session peer -> Int -> Int -> Effect Unit
+goAwayCodeLastStreamId :: forall endpoint. Http2Session endpoint -> Int -> Int -> Effect Unit
 goAwayCodeLastStreamId s c lsi = runEffectFn3 goAwayCodeLastStreamIdImpl s c lsi
 
-foreign import goAwayCodeLastStreamIdImpl :: forall peer. EffectFn3 (Http2Session peer) (Int) (Int) (Unit)
+foreign import goAwayCodeLastStreamIdImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Int) (Int) (Unit)
 
-goAwayCodeLastStreamIdData :: forall peer. Http2Session peer -> Int -> Int -> ImmutableBuffer -> Effect Unit
+goAwayCodeLastStreamIdData :: forall endpoint. Http2Session endpoint -> Int -> Int -> ImmutableBuffer -> Effect Unit
 goAwayCodeLastStreamIdData s c lsi buf = runEffectFn4 goAwayCodeLastStreamIdOpaqueDataImpl s c lsi buf
 
-foreign import goAwayCodeLastStreamIdOpaqueDataImpl :: forall peer. EffectFn4 (Http2Session peer) (Int) (Int) (ImmutableBuffer) (Unit)
+foreign import goAwayCodeLastStreamIdOpaqueDataImpl :: forall endpoint. EffectFn4 (Http2Session endpoint) (Int) (Int) (ImmutableBuffer) (Unit)
 
-localSettings :: forall peer. Http2Session peer -> Effect Settings
+localSettings :: forall endpoint. Http2Session endpoint -> Effect Settings
 localSettings s = runEffectFn1 localSettingsImpl s
 
-foreign import localSettingsImpl :: forall peer. EffectFn1 (Http2Session peer) (Settings)
+foreign import localSettingsImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Settings)
 
-originSet :: forall peer. Http2Session peer -> Array String
+originSet :: forall endpoint. Http2Session endpoint -> Array String
 originSet s = fromMaybe [] $ toMaybe $ runFn1 originSetImpl s
 
-foreign import originSetImpl :: forall peer. Fn1 (Http2Session peer) (Nullable (Array String))
+foreign import originSetImpl :: forall endpoint. Fn1 (Http2Session endpoint) (Nullable (Array String))
 
-pendingSettingsAck :: forall peer. Http2Session peer -> Effect Boolean
+pendingSettingsAck :: forall endpoint. Http2Session endpoint -> Effect Boolean
 pendingSettingsAck s = runEffectFn1 pendingSettingsAckImpl s
 
-foreign import pendingSettingsAckImpl :: forall peer. EffectFn1 (Http2Session peer) (Boolean)
+foreign import pendingSettingsAckImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Boolean)
 
-ping :: forall peer. Http2Session peer -> (Maybe Error -> Milliseconds -> ImmutableBuffer -> Effect Unit) -> Effect Boolean
+ping :: forall endpoint. Http2Session endpoint -> (Maybe Error -> Milliseconds -> ImmutableBuffer -> Effect Unit) -> Effect Boolean
 ping s cb = runEffectFn2 pingImpl s $ mkEffectFn3 \err dur payload ->
   cb (toMaybe err) dur payload
 
-foreign import pingImpl :: forall peer. EffectFn2 (Http2Session peer) (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
+foreign import pingImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
 
-pingPayload :: forall peer. Http2Session peer -> ImmutableBuffer -> (Maybe Error -> Milliseconds -> ImmutableBuffer -> Effect Unit) -> Effect Boolean
+pingPayload :: forall endpoint. Http2Session endpoint -> ImmutableBuffer -> (Maybe Error -> Milliseconds -> ImmutableBuffer -> Effect Unit) -> Effect Boolean
 pingPayload s buf cb = runEffectFn3 pingPayloadImpl s buf $ mkEffectFn3 \err dur payload ->
   cb (toMaybe err) dur payload
 
-foreign import pingPayloadImpl :: forall peer. EffectFn3 (Http2Session peer) ImmutableBuffer (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
+foreign import pingPayloadImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) ImmutableBuffer (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
 
-ref :: forall peer. Http2Session peer -> Effect Socket
+ref :: forall endpoint. Http2Session endpoint -> Effect Socket
 ref s = runEffectFn1 refImpl s
 
-foreign import refImpl :: forall peer. EffectFn1 (Http2Session peer) (Socket)
+foreign import refImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
 
-remoteSettings :: forall peer. Http2Session peer -> Effect Settings
+remoteSettings :: forall endpoint. Http2Session endpoint -> Effect Settings
 remoteSettings s = runEffectFn1 remoteSettingsImpl s
 
-foreign import remoteSettingsImpl :: forall peer. EffectFn1 (Http2Session peer) (Settings)
+foreign import remoteSettingsImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Settings)
 
-setLocalWindowSize :: forall peer. Http2Session peer -> Int -> Effect Unit
+setLocalWindowSize :: forall endpoint. Http2Session endpoint -> Int -> Effect Unit
 setLocalWindowSize s windowSize = runEffectFn2 setLocalWindowSizeImpl s windowSize
 
-foreign import setLocalWindowSizeImpl :: forall peer. EffectFn2 (Http2Session peer) (Int) (Unit)
+foreign import setLocalWindowSizeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Int) (Unit)
 
-setTimeout :: forall peer. Http2Session peer -> Milliseconds -> Effect Unit -> Effect Unit
+setTimeout :: forall endpoint. Http2Session endpoint -> Milliseconds -> Effect Unit -> Effect Unit
 setTimeout s msecs cb = runEffectFn3 setTimeoutImpl s msecs cb
 
-foreign import setTimeoutImpl :: forall peer. EffectFn3 (Http2Session peer) (Milliseconds) (Effect Unit) (Unit)
+foreign import setTimeoutImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Milliseconds) (Effect Unit) (Unit)
 
-settings :: forall peer. Http2Session peer -> Settings -> (Maybe Error -> Settings -> Int -> Effect Unit) -> Effect Unit
+settings :: forall endpoint. Http2Session endpoint -> Settings -> (Maybe Error -> Settings -> Int -> Effect Unit) -> Effect Unit
 settings s set cb = runEffectFn3 settingsImpl s set $ mkEffectFn3 \err set' duration ->
   cb (toMaybe err) set' duration
 
-foreign import settingsImpl :: forall peer. EffectFn3 (Http2Session peer) (Settings) (EffectFn3 (Nullable Error) Settings Int Unit) (Unit)
+foreign import settingsImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Settings) (EffectFn3 (Nullable Error) Settings Int Unit) (Unit)
 
-socket :: forall peer. Http2Session peer -> Effect Socket
+socket :: forall endpoint. Http2Session endpoint -> Effect Socket
 socket s = runEffectFn1 socketImpl s
 
-foreign import socketImpl :: forall peer. EffectFn1 (Http2Session peer) (Socket)
+foreign import socketImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
 
 -- | `effectiveLocalWindowSize` <number> The current local (receive) flow control window size for the Http2Session peer.
 -- | `effectiveRecvDataLength` <number> The current number of bytes that have been received since the last flow control WINDOW_UPDATE.
@@ -261,20 +261,20 @@ type Http2SessionState =
   , inflateDynamicTableSize :: Int
   }
 
-state :: forall peer. Http2Session peer -> Effect Http2SessionState
+state :: forall endpoint. Http2Session endpoint -> Effect Http2SessionState
 state s = runEffectFn1 stateImpl s
 
-foreign import stateImpl :: forall peer. EffectFn1 (Http2Session peer) (Http2SessionState)
+foreign import stateImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Http2SessionState)
 
-type_ :: forall peer. Http2Session peer -> Int
+type_ :: forall endpoint. Http2Session endpoint -> Int
 type_ = runFn1 typeImpl
 
-foreign import typeImpl :: forall peer. Fn1 (Http2Session peer) Int
+foreign import typeImpl :: forall endpoint. Fn1 (Http2Session endpoint) Int
 
-unref :: forall peer. Http2Session peer -> Effect Socket
+unref :: forall endpoint. Http2Session endpoint -> Effect Socket
 unref s = runEffectFn1 unrefImpl s
 
-foreign import unrefImpl :: forall peer. EffectFn1 (Http2Session peer) (Socket)
+foreign import unrefImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
 
 altsvc :: Http2Session Server -> String -> Either Int String -> Effect Unit
 altsvc s alt originOrStream = case originOrStream of
