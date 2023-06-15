@@ -24,7 +24,6 @@ import Node.Http2.Types (Http2Session)
 import Node.Net.Server as NServer
 import Node.Path as Path
 import Node.Stream as Stream
-import Node.TLS.Server as TServer
 import Unsafe.Coerce (unsafeCoerce)
 
 unsafeToImmutableBuffer :: Buffer.Buffer -> Effect ImmutableBuffer
@@ -44,23 +43,20 @@ main = do
     { key: [ privateKey ]
     , cert: [ cert ]
     }
-  let
-    tlsServer = Server.toTlsServer server
-    netServer = TServer.toNetServer tlsServer
-  on Server.checkContinueHandle server \req res -> do
+  on Server.checkContinueHandle server.http2 \req res -> do
     log "server - onCheckContinue"
-  on NServer.connectionHandle netServer \duplex -> do
+  on NServer.connectionHandle server.net \duplex -> do
     log "server - onConnection"
-  on Server.sessionHandle server \session -> do
+  on Server.sessionHandle server.http2 \session -> do
     log "server - onSession"
     log "Testing properties for any thrown errors"
     printHttp2SessionState session
 
-  on Server.sessionErrorHandle server \err session -> do
+  on Server.sessionErrorHandle server.http2 \err session -> do
     log "server - onSessionError"
     log (unsafeCoerce err)
     printHttp2SessionState session
-  on Server.streamHandle server \stream headers flags rawHeaders -> do
+  on Server.streamHandle server.http2 \stream headers flags rawHeaders -> do
     streamId <- H2Stream.id stream
     log $ "server - onStream for id: " <> show streamId
     forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
@@ -79,17 +75,17 @@ main = do
         log $ "server - onStream - closing for id: " <> show streamId
         H2Stream.close stream NGHTTP2.noError
 
-  on Server.timeoutHandle tlsServer do
+  on Server.timeoutHandle server.tls do
     log "onTimeout"
-  on Server.unknownProtocolHandle server \duplex -> do
+  on Server.unknownProtocolHandle server.http2 \duplex -> do
     log "onUnknownProtocol"
   -- https://stackoverflow.com/a/63173619
   -- "In UNIX-like systems, non-root users are unable to bind to ports lower than 1024."
   let httpsPort = 8443
-  NServer.listenTcp netServer
+  NServer.listenTcp server.net
     { port: httpsPort
     }
-  on NServer.listeningHandle netServer do
+  on NServer.listeningHandle server.net do
     log "server listening"
     session <- Client.connect' ("https://localhost:" <> show httpsPort)
       { ca: [ cert ]
@@ -119,7 +115,7 @@ main = do
         log $ "client - onResponse body: " <> show str
         H2Stream.close stream NGHTTP2.noError
         Session.destroy session
-        NServer.close netServer
+        NServer.close server.net
 
 printHttp2SessionState :: forall endpoint. Http2Session endpoint -> Effect Unit
 printHttp2SessionState session = do
