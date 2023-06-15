@@ -12,6 +12,7 @@ import Foreign.Object (Object)
 import Node.Buffer as Buffer
 import Node.Buffer.Immutable (ImmutableBuffer)
 import Node.Encoding (Encoding(..))
+import Node.EventEmitter (on)
 import Node.FS.Sync as FS
 import Node.Http2.Client as Client
 import Node.Http2.Constants as NGHTTP2
@@ -19,32 +20,47 @@ import Node.Http2.Server as Server
 import Node.Http2.Session as Session
 import Node.Http2.Stream (toDuplex)
 import Node.Http2.Stream as H2Stream
-import Node.Net.Server (onListening)
+import Node.Http2.Types (Http2Session)
+import Node.Net.Server as NServer
 import Node.Path as Path
 import Node.Stream as Stream
+import Node.TLS.Server as TServer
 import Unsafe.Coerce (unsafeCoerce)
 
 unsafeToImmutableBuffer :: Buffer.Buffer -> Effect ImmutableBuffer
 unsafeToImmutableBuffer = Buffer.unsafeFreeze
 
+logWith :: String -> String -> Effect Unit
+logWith msg x = log $ msg <> ": " <> x
+
+logShowWith :: forall a. Show a => String -> a -> Effect Unit
+logShowWith msg = logWith msg <<< show
+
 main :: Effect Unit
 main = do
-  privateKey <- FS.readFile (Path.concat [ "test", "localhost-privkey.pem" ]) >>= unsafeToImmutableBuffer
-  cert <- FS.readFile (Path.concat [ "test", "localhost-cert.pem" ]) >>= unsafeToImmutableBuffer
+  privateKey <- FS.readFile (Path.concat [ "test", "localhost-privkey.pem" ])
+  cert <- FS.readFile (Path.concat [ "test", "localhost-cert.pem" ])
   server <- Server.createSecureServer
     { key: [ privateKey ]
     , cert: [ cert ]
     }
-  Server.onCheckContinue server \req res -> do
+  let
+    tlsServer = Server.toTlsServer server
+    netServer = TServer.toNetServer tlsServer
+  on Server.checkContinueHandle server \req res -> do
     log "server - onCheckContinue"
-  Server.onConnection server \duplex -> do
+  on NServer.connectionHandle netServer \duplex -> do
     log "server - onConnection"
-  Server.onSession server \session -> do
+  on Server.sessionHandle server \session -> do
     log "server - onSession"
-  Server.onSessionError server \err session -> do
+    log "Testing properties for any thrown errors"
+    printHttp2SessionState session
+
+  on Server.sessionErrorHandle server \err session -> do
     log "server - onSessionError"
     log (unsafeCoerce err)
-  Server.onStream server \stream headers flags rawHeaders -> do
+    printHttp2SessionState session
+  on Server.streamHandle server \stream headers flags rawHeaders -> do
     streamId <- H2Stream.id stream
     log $ "server - onStream for id: " <> show streamId
     forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
@@ -53,27 +69,27 @@ main = do
     log $ "server - onStream - Raw Headers: " <> show rawHeaders
     let duplex = H2Stream.toDuplex stream
     H2Stream.respond stream (unsafeCoerce { "an-http-header": "value" })
-      { endStream: false
-      , waitForTrailers: false
+      { endStream: false -- if this is true, then Stream.write/end produces error
+      , waitForTrailers: true
       }
     -- H2Stream.close stream NGHTTP2.noError
-    void $ Stream.writeString duplex UTF8 "hello from server" \err -> do
+    Stream.writeStringCb_ duplex UTF8 "hello from server" \err -> do
       log (unsafeCoerce err)
-      void $ Stream.end duplex \_ -> do
+      Stream.end' duplex \_ -> do
         log $ "server - onStream - closing for id: " <> show streamId
         H2Stream.close stream NGHTTP2.noError
 
-  Server.onTimeout server do
+  on Server.timeoutHandle tlsServer do
     log "onTimeout"
-  Server.onUnknownProtocol server \duplex -> do
+  on Server.unknownProtocolHandle server \duplex -> do
     log "onUnknownProtocol"
   -- https://stackoverflow.com/a/63173619
   -- "In UNIX-like systems, non-root users are unable to bind to ports lower than 1024."
   let httpsPort = 8443
-  Server.listen server
+  NServer.listenTcp netServer
     { port: httpsPort
     }
-  onListening (unsafeCoerce server) do
+  on NServer.listeningHandle netServer do
     log "server listening"
     session <- Client.connect' ("https://localhost:" <> show httpsPort)
       { ca: [ cert ]
@@ -87,21 +103,34 @@ main = do
           }
       )
     let duplex = toDuplex stream
-    void $ Stream.end duplex (const mempty)
+    Stream.end duplex
     H2Stream.onResponse stream \headers flags -> do
       log "client - onResponse"
       forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
         log $ k <> ": " <> v
       log $ "Flags: " <> show flags
       chunksRef <- Ref.new []
-      Stream.onData duplex \buf ->
+      on Stream.dataHandle duplex \buf ->
         Ref.modify_ (flip Array.snoc buf) chunksRef
-      Stream.onEnd duplex do
+      on Stream.endHandle duplex do
         chunks <- Ref.read chunksRef
         buffer <- Buffer.concat chunks :: Effect Buffer.Buffer
         str <- Buffer.toString UTF8 buffer :: Effect String
         log $ "client - onResponse body: " <> show str
         H2Stream.close stream NGHTTP2.noError
         Session.destroy session
-        Server.close server
+        NServer.close netServer
+
+printHttp2SessionState :: forall endpoint. Http2Session endpoint -> Effect Unit
+printHttp2SessionState session = do
+  Session.alpnProtocol session >>= logShowWith "ALPN Protocol"
+  Session.closed session >>= logShowWith "closed"
+  Session.connecting session >>= logShowWith "connecting"
+  Session.destroyed session >>= logShowWith "destroyed"
+  Session.encrypted session >>= logShowWith "encrypted"
+  logShowWith "origin set" $ Session.originSet session
+  Session.pendingSettingsAck session >>= logShowWith "pending settings acknowlegement"
+  Session.remoteSettings session >>= logShowWith "remote settings"
+  Session.state session >>= logShowWith "state"
+  logShowWith "type" $ Session.type_ session
 

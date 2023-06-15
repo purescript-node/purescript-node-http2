@@ -11,16 +11,17 @@
   , "functions"
   , "maybe"
   , "node-buffer"
+  , "node-event-emitter"
   , "node-fs"
   , "node-net"
   , "node-path"
   , "node-streams"
+  , "node-tls"
   , "nullable"
   , "partial"
   , "prelude"
   , "refs"
   , "spec"
-  , "typelevel-prelude"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall

@@ -58,18 +58,19 @@ import Effect (Effect)
 import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn1, mkEffectFn2, mkEffectFn3, mkEffectFn4, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Node.Buffer.Immutable (ImmutableBuffer)
-import Node.Http2.Types (Client, Headers, Http2Session, Http2Stream, Server, Settings)
-import Node.Net.Socket (Socket)
+import Node.Http2.Types (Headers, Http2Session, Http2Stream, Settings)
+import Node.Net.Types (Socket, TCP)
+import Node.TLS.Types (Client, Server)
 
 onClose :: forall endpoint. Http2Session endpoint -> Effect Unit -> Effect Unit
 onClose session cb = runEffectFn2 onCloseImpl session cb
 
 foreign import onCloseImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Effect Unit) Unit
 
-onConnect :: forall endpoint. Http2Session endpoint -> (Http2Session endpoint -> Socket -> Effect Unit) -> Effect Unit
+onConnect :: forall endpoint. Http2Session endpoint -> (Http2Session endpoint -> Socket TCP -> Effect Unit) -> Effect Unit
 onConnect h2s cb = runEffectFn2 onConnectImpl h2s $ mkEffectFn2 cb
 
-foreign import onConnectImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn2 (Http2Session endpoint) Socket Unit) Unit
+foreign import onConnectImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn2 (Http2Session endpoint) (Socket TCP) Unit) Unit
 
 onError :: forall endpoint. Http2Session endpoint -> (Error -> Effect Unit) -> Effect Unit
 onError session cb = runEffectFn2 onErrorImpl session $ mkEffectFn1 cb
@@ -209,10 +210,10 @@ pingPayload s buf cb = runEffectFn3 pingPayloadImpl s buf $ mkEffectFn3 \err dur
 
 foreign import pingPayloadImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) ImmutableBuffer (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
 
-ref :: forall endpoint. Http2Session endpoint -> Effect Socket
+ref :: forall endpoint. Http2Session endpoint -> Effect (Socket TCP)
 ref s = runEffectFn1 refImpl s
 
-foreign import refImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
+foreign import refImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket TCP)
 
 remoteSettings :: forall endpoint. Http2Session endpoint -> Effect Settings
 remoteSettings s = runEffectFn1 remoteSettingsImpl s
@@ -235,10 +236,10 @@ settings s set cb = runEffectFn3 settingsImpl s set $ mkEffectFn3 \err set' dura
 
 foreign import settingsImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Settings) (EffectFn3 (Nullable Error) Settings Int Unit) (Unit)
 
-socket :: forall endpoint. Http2Session endpoint -> Effect Socket
+socket :: forall endpoint. Http2Session endpoint -> Effect (Socket TCP)
 socket s = runEffectFn1 socketImpl s
 
-foreign import socketImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
+foreign import socketImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket TCP)
 
 -- | `effectiveLocalWindowSize` <number> The current local (receive) flow control window size for the Http2Session peer.
 -- | `effectiveRecvDataLength` <number> The current number of bytes that have been received since the last flow control WINDOW_UPDATE.
@@ -271,10 +272,10 @@ type_ = runFn1 typeImpl
 
 foreign import typeImpl :: forall endpoint. Fn1 (Http2Session endpoint) Int
 
-unref :: forall endpoint. Http2Session endpoint -> Effect Socket
+unref :: forall endpoint. Http2Session endpoint -> Effect (Socket TCP)
 unref s = runEffectFn1 unrefImpl s
 
-foreign import unrefImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket)
+foreign import unrefImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Socket TCP)
 
 altsvcStreamId :: Http2Session Server -> String -> Int -> Effect Unit
 altsvcStreamId s alt streamId = runEffectFn3 altsvcStreamImpl s alt streamId

@@ -7,6 +7,7 @@
   , "functions"
   , "maybe"
   , "node-buffer"
+  , "node-event-emitter"
   , "node-fs"
   , "node-net"
   , "node-path"
@@ -15,7 +16,7 @@
   , "nullable"
   , "partial"
   , "prelude"
-  , "typelevel-prelude"
+  , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs" ]
