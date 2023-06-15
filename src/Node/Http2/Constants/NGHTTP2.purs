@@ -1,4 +1,4 @@
-module Node.Http2.Constants where
+module Node.Http2.Constants.NGHTTP2 where
 
 foreign import noError :: Int
 foreign import protocolError :: Int

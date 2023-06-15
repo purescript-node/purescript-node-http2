@@ -15,7 +15,7 @@ import Node.Encoding (Encoding(..))
 import Node.EventEmitter (on)
 import Node.FS.Sync as FS
 import Node.Http2.Client as Client
-import Node.Http2.Constants as NGHTTP2
+import Node.Http2.Constants.NGHTTP2 as NGHTTP2
 import Node.Http2.Server as Server
 import Node.Http2.Session as Session
 import Node.Http2.Stream (toDuplex)
