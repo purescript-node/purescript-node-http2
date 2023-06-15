@@ -11,6 +11,7 @@
   , "node-net"
   , "node-path"
   , "node-streams"
+  , "node-tls"
   , "nullable"
   , "partial"
   , "prelude"
