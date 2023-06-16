@@ -59,7 +59,6 @@ import Effect (Effect)
 import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn1, mkEffectFn2, mkEffectFn3, mkEffectFn4, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Node.Buffer (Buffer)
-import Node.Buffer.Immutable (ImmutableBuffer)
 import Node.EventEmitter (EventEmitter, EventHandle(..))
 import Node.EventEmitter.UtilTypes (EventHandle0, EventHandle1, EventHandle2, EventHandle3, EventHandle4)
 import Node.Http2.ErrorCode (ErrorCode)
@@ -193,17 +192,17 @@ pendingSettingsAck s = runEffectFn1 pendingSettingsAckImpl s
 
 foreign import pendingSettingsAckImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Boolean)
 
-ping :: forall endpoint. Http2Session endpoint -> (Maybe Error -> Milliseconds -> ImmutableBuffer -> Effect Unit) -> Effect Boolean
+ping :: forall endpoint. Http2Session endpoint -> (Maybe Error -> Milliseconds -> Buffer -> Effect Unit) -> Effect Boolean
 ping s cb = runEffectFn2 pingImpl s $ mkEffectFn3 \err dur payload ->
   cb (toMaybe err) dur payload
 
-foreign import pingImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
+foreign import pingImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 (Nullable Error) Milliseconds Buffer Unit) (Boolean)
 
-pingPayload :: forall endpoint. Http2Session endpoint -> ImmutableBuffer -> (Maybe Error -> Milliseconds -> ImmutableBuffer -> Effect Unit) -> Effect Boolean
+pingPayload :: forall endpoint. Http2Session endpoint -> Buffer -> (Maybe Error -> Milliseconds -> Buffer -> Effect Unit) -> Effect Boolean
 pingPayload s buf cb = runEffectFn3 pingPayloadImpl s buf $ mkEffectFn3 \err dur payload ->
   cb (toMaybe err) dur payload
 
-foreign import pingPayloadImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) ImmutableBuffer (EffectFn3 (Nullable Error) Milliseconds ImmutableBuffer Unit) (Boolean)
+foreign import pingPayloadImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) Buffer (EffectFn3 (Nullable Error) Milliseconds Buffer Unit) (Boolean)
 
 ref :: forall endpoint. Http2Session endpoint -> Effect (Socket TCP)
 ref s = runEffectFn1 refImpl s

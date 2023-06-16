@@ -26,9 +26,6 @@ import Node.Path as Path
 import Node.Stream as Stream
 import Unsafe.Coerce (unsafeCoerce)
 
-unsafeToImmutableBuffer :: Buffer.Buffer -> Effect ImmutableBuffer
-unsafeToImmutableBuffer = Buffer.unsafeFreeze
-
 logWith :: String -> String -> Effect Unit
 logWith msg x = log $ msg <> ": " <> x
 

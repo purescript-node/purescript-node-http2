@@ -7,7 +7,7 @@ module Node.Http2.Settings
 
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, runEffectFn1)
-import Node.Buffer.Immutable (ImmutableBuffer)
+import Node.Buffer (Buffer)
 import Node.Http2.Types (Settings)
 
 defaultSettings :: Settings
@@ -23,12 +23,12 @@ defaultSettings =
 
 foreign import getDefaultSettings :: Effect (Settings)
 
-getPackedSettings :: Settings -> Effect ImmutableBuffer
+getPackedSettings :: Settings -> Effect Buffer
 getPackedSettings s = runEffectFn1 getPackedSettingsImpl s
 
-foreign import getPackedSettingsImpl :: EffectFn1 (Settings) (ImmutableBuffer)
+foreign import getPackedSettingsImpl :: EffectFn1 (Settings) (Buffer)
 
-getUnpackedSettings :: ImmutableBuffer -> Effect Settings
+getUnpackedSettings :: Buffer -> Effect Settings
 getUnpackedSettings buf = runEffectFn1 getUnpackedSettingsImpl buf
 
-foreign import getUnpackedSettingsImpl :: EffectFn1 (ImmutableBuffer) (Settings)
+foreign import getUnpackedSettingsImpl :: EffectFn1 (Buffer) (Settings)
