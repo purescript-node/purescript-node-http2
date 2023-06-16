@@ -1,13 +1,3 @@
-export const onCloseImpl = (http2Session, cb) => http2Session.on("close", cb);
-export const onConnectImpl = (http2Session, cb) => http2Session.on("connect", cb);
-export const onErrorImpl = (http2Session, cb) => http2Session.on("error", cb);
-export const onFrameErrorImpl = (http2Session, cb) => http2Session.on("frameError", cb);
-export const onGoAwayImpl = (http2Session, cb) => http2Session.on("goAway", cb);
-export const onLocalSettingsImpl = (http2Session, cb) => http2Session.on("localSettings", cb);
-export const onPingImpl = (http2Session, cb) => http2Session.on("ping", cb);
-export const onRemoteSettingsImpl = (http2Session, cb) => http2Session.on("remoteSettings", cb);
-export const onStreamImpl = (http2Session, cb) => http2Session.on("stream", cb);
-export const onTimeoutImpl = (http2Session, cb) => http2Session.on("timeout", cb);
 export const alpnProtocolImpl = (http2Session) => http2Session.alpnProtocol;
 export const closeImpl = (http2Session) => http2Session.close();
 // Intentionally not supporting the `http2Session.close(cb)` API
@@ -45,7 +35,5 @@ export const altsvcStreamImpl = (http2session, alt, stream) => http2session.alts
 export const originImpl = (http2session, origins) => http2session.origin(origins);
 
 // client
-export const onAltsvcImpl = (http2session, cb) => http2session.on("altsvc", cb);
-export const onOriginImpl = (http2session, cb) => http2session.on("origin", cb);
 export const requestHeadersImpl = (http2session, headers) => http2session.request(headers);
 export const requestHeadersOptionsImpl = (http2session, headers, options) => http2session.request(headers, options);

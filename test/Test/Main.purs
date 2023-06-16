@@ -90,7 +90,7 @@ main = do
     session <- Client.connect' ("https://localhost:" <> show httpsPort)
       { ca: [ cert ]
       }
-    Session.onError session \error ->
+    on Session.errorHandle session \error ->
       log $ "Client session encountered error: " <> Exception.message error
     stream <- Session.request session
       ( unsafeCoerce

@@ -1,14 +1,15 @@
 module Node.Http2.Session
-  ( onClose
-  , onConnect
-  , onError
-  , onFrameError
-  , onGoAway
-  , onLocalSettings
-  , onPing
-  , onRemoteSettings
-  , onStream
-  , onTimeout
+  ( toEventEmitter
+  , closeHandle
+  , connectHandle
+  , errorHandle
+  , frameErrorHandle
+  , goAwayHandle
+  , localSettingsHandle
+  , pingHandle
+  , remoteSettingsHandle
+  , streamHandle
+  , timeoutHandle
   , alpnProtocol
   , close
   , closed
@@ -41,8 +42,8 @@ module Node.Http2.Session
   , altsvcStreamId
   , altsvcOrigin
   , origin
-  , onAltsvc
-  , onOrigin
+  , altsvcHandle
+  , originHandle
   , RequestOptions
   , request
   , request'
@@ -57,61 +58,53 @@ import Data.Time.Duration (Milliseconds)
 import Effect (Effect)
 import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn1, mkEffectFn2, mkEffectFn3, mkEffectFn4, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
+import Node.Buffer (Buffer)
 import Node.Buffer.Immutable (ImmutableBuffer)
-import Node.Http2.Types (Headers, Http2Session, Http2Stream, Settings)
+import Node.EventEmitter (EventEmitter, EventHandle(..))
+import Node.EventEmitter.UtilTypes (EventHandle0, EventHandle1, EventHandle2, EventHandle3, EventHandle4)
+import Node.Http2.Flags (BitwiseFlag)
+import Node.Http2.Types (ErrorCode, FrameType, Headers, Http2Session, Http2Stream, Settings, StreamId)
 import Node.Net.Types (Socket, TCP)
 import Node.TLS.Types (Client, Server)
+import Unsafe.Coerce (unsafeCoerce)
 
-onClose :: forall endpoint. Http2Session endpoint -> Effect Unit -> Effect Unit
-onClose session cb = runEffectFn2 onCloseImpl session cb
+toEventEmitter :: forall endpoint. Http2Session endpoint -> EventEmitter
+toEventEmitter = unsafeCoerce
 
-foreign import onCloseImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Effect Unit) Unit
+closeHandle :: forall endpoint. EventHandle0 (Http2Session endpoint)
+closeHandle = EventHandle "close" identity
 
-onConnect :: forall endpoint. Http2Session endpoint -> (Http2Session endpoint -> Socket TCP -> Effect Unit) -> Effect Unit
-onConnect h2s cb = runEffectFn2 onConnectImpl h2s $ mkEffectFn2 cb
+connectHandle :: forall endpoint. EventHandle2 (Http2Session endpoint) (Http2Session endpoint) (Socket TCP)
+connectHandle = EventHandle "connect" \cb -> mkEffectFn2 \a b -> cb a b
 
-foreign import onConnectImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn2 (Http2Session endpoint) (Socket TCP) Unit) Unit
+errorHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Error
+errorHandle = EventHandle "error" mkEffectFn1
 
-onError :: forall endpoint. Http2Session endpoint -> (Error -> Effect Unit) -> Effect Unit
-onError session cb = runEffectFn2 onErrorImpl session $ mkEffectFn1 cb
+frameErrorHandle :: forall endpoint. EventHandle3 (Http2Session endpoint) FrameType ErrorCode StreamId
+frameErrorHandle = EventHandle "frameError" \cb -> mkEffectFn3 \a b c -> cb a b c
 
-foreign import onErrorImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 Error Unit) (Unit)
+goAwayHandle
+  :: forall endpoint
+   . EventHandle
+       (Http2Session endpoint)
+       (ErrorCode -> StreamId -> (Maybe Buffer) -> Effect Unit)
+       (EffectFn3 ErrorCode StreamId (Nullable Buffer) Unit)
+goAwayHandle = EventHandle "goAway" \cb -> mkEffectFn3 \a b c -> cb a b (toMaybe c)
 
-onFrameError :: forall endpoint. Http2Session endpoint -> (Int -> Int -> Int -> Effect Unit) -> Effect Unit
-onFrameError session cb = runEffectFn2 onFrameErrorImpl session $ mkEffectFn3 cb
+localSettingsHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Settings
+localSettingsHandle = EventHandle "localSettings" mkEffectFn1
 
-foreign import onFrameErrorImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 Int Int Int Unit) (Unit)
+pingHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Buffer
+pingHandle = EventHandle "ping" mkEffectFn1
 
-onGoAway :: forall endpoint. Http2Session endpoint -> (Int -> Int -> Maybe ImmutableBuffer -> Effect Unit) -> Effect Unit
-onGoAway session cb = runEffectFn2 onGoAwayImpl session $ mkEffectFn3 \c lsi buf ->
-  cb c lsi (toMaybe buf)
+remoteSettingsHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Settings
+remoteSettingsHandle = EventHandle "remoteSettings" mkEffectFn1
 
-foreign import onGoAwayImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn3 Int Int (Nullable ImmutableBuffer) Unit) (Unit)
+streamHandle :: forall endpoint. EventHandle4 (Http2Session endpoint) (Http2Stream endpoint) Headers BitwiseFlag (Array String)
+streamHandle = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
 
-onLocalSettings :: forall endpoint. Http2Session endpoint -> (Settings -> Effect Unit) -> Effect Unit
-onLocalSettings session cb = runEffectFn2 onLocalSettingsImpl session $ mkEffectFn1 cb
-
-foreign import onLocalSettingsImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 Settings Unit) (Unit)
-
-onPing :: forall endpoint. Http2Session endpoint -> (Maybe ImmutableBuffer -> Effect Unit) -> Effect Unit
-onPing sesson cb = runEffectFn2 onPingImpl sesson $ mkEffectFn1 \a -> cb $ toMaybe a
-
-foreign import onPingImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 (Nullable ImmutableBuffer) Unit) (Unit)
-
-onRemoteSettings :: forall endpoint. Http2Session endpoint -> (Settings -> Effect Unit) -> Effect Unit
-onRemoteSettings session cb = runEffectFn2 onRemoteSettingsImpl session $ mkEffectFn1 cb
-
-foreign import onRemoteSettingsImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn1 Settings Unit) (Unit)
-
-onStream :: forall endpoint. Http2Session endpoint -> (Http2Stream endpoint -> Headers -> Number -> (Array String) -> Effect Unit) -> Effect Unit
-onStream session cb = runEffectFn2 onStreamImpl session $ mkEffectFn4 cb
-
-foreign import onStreamImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (EffectFn4 (Http2Stream endpoint) Headers Number (Array String) Unit) (Unit)
-
-onTimeout :: forall endpoint. Http2Session endpoint -> Effect Unit -> Effect Unit
-onTimeout session cb = runEffectFn2 onTimeoutImpl session cb
-
-foreign import onTimeoutImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Effect Unit) (Unit)
+timeoutHandle :: forall endpoint. EventHandle0 (Http2Session endpoint)
+timeoutHandle = EventHandle "timeout" identity
 
 alpnProtocol :: forall endpoint. Http2Session endpoint -> Effect (Maybe String)
 alpnProtocol session = map toMaybe $ runEffectFn1 alpnProtocolImpl session
@@ -143,15 +136,15 @@ destroyWithError s e = runEffectFn2 destroyWithErrorImpl s e
 
 foreign import destroyWithErrorImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Error) (Unit)
 
-destroyWithCode :: forall endpoint. Http2Session endpoint -> Int -> Effect Unit
+destroyWithCode :: forall endpoint. Http2Session endpoint -> ErrorCode -> Effect Unit
 destroyWithCode s c = runEffectFn2 destroyWithCodeImpl s c
 
-foreign import destroyWithCodeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Int) (Unit)
+foreign import destroyWithCodeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (ErrorCode) (Unit)
 
-destroyWithErrorCode :: forall endpoint. Http2Session endpoint -> Error -> Int -> Effect Unit
+destroyWithErrorCode :: forall endpoint. Http2Session endpoint -> Error -> ErrorCode -> Effect Unit
 destroyWithErrorCode s e c = runEffectFn3 destroyWithErrorCodeImpl s e c
 
-foreign import destroyWithErrorCodeImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Error) (Int) (Unit)
+foreign import destroyWithErrorCodeImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Error) (ErrorCode) (Unit)
 
 destroyed :: forall endpoint. Http2Session endpoint -> Effect Boolean
 destroyed s = runEffectFn1 destroyedImpl s
@@ -168,20 +161,20 @@ goAway s = runEffectFn1 goAwayImpl s
 
 foreign import goAwayImpl :: forall endpoint. EffectFn1 (Http2Session endpoint) (Unit)
 
-goAwayCode :: forall endpoint. Http2Session endpoint -> Int -> Effect Unit
+goAwayCode :: forall endpoint. Http2Session endpoint -> ErrorCode -> Effect Unit
 goAwayCode s c = runEffectFn2 goAwayCodeImpl s c
 
-foreign import goAwayCodeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (Int) (Unit)
+foreign import goAwayCodeImpl :: forall endpoint. EffectFn2 (Http2Session endpoint) (ErrorCode) (Unit)
 
-goAwayCodeLastStreamId :: forall endpoint. Http2Session endpoint -> Int -> Int -> Effect Unit
+goAwayCodeLastStreamId :: forall endpoint. Http2Session endpoint -> ErrorCode -> StreamId -> Effect Unit
 goAwayCodeLastStreamId s c lsi = runEffectFn3 goAwayCodeLastStreamIdImpl s c lsi
 
-foreign import goAwayCodeLastStreamIdImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (Int) (Int) (Unit)
+foreign import goAwayCodeLastStreamIdImpl :: forall endpoint. EffectFn3 (Http2Session endpoint) (ErrorCode) (StreamId) (Unit)
 
-goAwayCodeLastStreamIdData :: forall endpoint. Http2Session endpoint -> Int -> Int -> ImmutableBuffer -> Effect Unit
+goAwayCodeLastStreamIdData :: forall endpoint. Http2Session endpoint -> ErrorCode -> StreamId -> Buffer -> Effect Unit
 goAwayCodeLastStreamIdData s c lsi buf = runEffectFn4 goAwayCodeLastStreamIdOpaqueDataImpl s c lsi buf
 
-foreign import goAwayCodeLastStreamIdOpaqueDataImpl :: forall endpoint. EffectFn4 (Http2Session endpoint) (Int) (Int) (ImmutableBuffer) (Unit)
+foreign import goAwayCodeLastStreamIdOpaqueDataImpl :: forall endpoint. EffectFn4 (Http2Session endpoint) (ErrorCode) (StreamId) (Buffer) (Unit)
 
 localSettings :: forall endpoint. Http2Session endpoint -> Effect Settings
 localSettings s = runEffectFn1 localSettingsImpl s
@@ -292,15 +285,11 @@ origin s o = runEffectFn2 originImpl s o
 
 foreign import originImpl :: EffectFn2 (Http2Session Server) (Array String) (Unit)
 
-onAltsvc :: Http2Session Client -> (String -> String -> Int -> Effect Unit) -> Effect Unit
-onAltsvc s cb = runEffectFn2 onAltsvcImpl s $ mkEffectFn3 cb
+altsvcHandle :: EventHandle3 (Http2Session Client) String String StreamId
+altsvcHandle = EventHandle "altsvc" \cb -> mkEffectFn3 \a b c -> cb a b c
 
-foreign import onAltsvcImpl :: EffectFn2 (Http2Session Client) (EffectFn3 String String Int Unit) (Unit)
-
-onOrigin :: Http2Session Client -> (Array String -> Effect Unit) -> Effect Unit
-onOrigin s cb = runEffectFn2 onOriginImpl s $ mkEffectFn1 cb
-
-foreign import onOriginImpl :: EffectFn2 (Http2Session Client) (EffectFn1 (Array String) Unit) (Unit)
+originHandle :: EventHandle1 (Http2Session Client) (Array String)
+originHandle = EventHandle "origin" mkEffectFn1
 
 -- | `endStream` <boolean> true if the Http2Stream writable side should be closed initially, such as when sending a GET request that should not expect a payload body.
 -- | `exclusive` <boolean> When true and parent identifies a parent Stream, the created stream is made the sole direct dependency of the parent, with all other existing dependents made a dependent of the newly created stream. Default: false.
