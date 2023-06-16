@@ -22,9 +22,10 @@ import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, mkEffectFn1, mkEffectFn2, mkEffectFn4, runEffectFn1, runEffectFn2)
 import Node.EventEmitter (EventHandle(..))
 import Node.EventEmitter.UtilTypes (EventHandle1, EventHandle2, EventHandle4, EventHandle0)
+import Node.Http2.Flags (BitwiseFlag)
 import Node.Http2.Types (Headers, Http2CreateSecureServerOptions, Http2SecureServer, Http2ServerRequest, Http2ServerResponse, Http2Session, Http2Stream, Settings)
-import Node.Net.Types as NetTypes
 import Node.Net.Types (NewServerOptions, TCP)
+import Node.Net.Types as NetTypes
 import Node.Stream (Duplex)
 import Node.TLS.Server as TlsServer
 import Node.TLS.Types (CreateSecureContextOptions, Server, TlsCreateServerOptions, TlsServer)
@@ -71,7 +72,7 @@ sessionHandle = EventHandle "session" mkEffectFn1
 sessionErrorHandle :: EventHandle2 Http2SecureServer Error (Http2Session Server)
 sessionErrorHandle = EventHandle "sessionError" \cb -> mkEffectFn2 \a b -> cb a b
 
-streamHandle :: EventHandle4 Http2SecureServer (Http2Stream Server) Headers Int (Array String)
+streamHandle :: EventHandle4 Http2SecureServer (Http2Stream Server) Headers BitwiseFlag (Array String)
 streamHandle = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
 
 timeoutHandle :: EventHandle0 TlsServer
