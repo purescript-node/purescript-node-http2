@@ -100,7 +100,7 @@ main = do
       )
     let duplex = toDuplex stream
     Stream.end duplex
-    H2Stream.onResponse stream \headers flags -> do
+    on H2Stream.responseHandle stream \headers flags -> do
       log "client - onResponse"
       forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
         log $ k <> ": " <> v

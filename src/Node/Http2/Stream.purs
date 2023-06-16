@@ -1,13 +1,13 @@
 module Node.Http2.Stream
   ( toDuplex
-  , onAbort
-  , onClose
-  , onError
-  , onFrameError
-  , onReady
-  , onTimeout
-  , onTrailers
-  , onWantTrailers
+  , abortedHandle
+  , closeHandle
+  , errorHandle
+  , frameErrorHandle
+  , readyHandle
+  , timeoutHandle
+  , trailersHandle
+  , wantTrailersHandle
   , bufferSize
   , close
   , closed
@@ -38,10 +38,10 @@ module Node.Http2.Stream
   , respondWithFd
   , RespondWithFileOptions
   , respondWithFile
-  , onContinue
-  , onHeaders
-  , onPush
-  , onResponse
+  , continueHandle
+  , headersHandle
+  , pushHandle
+  , responseHandle
   ) where
 
 import Prelude
@@ -53,64 +53,52 @@ import Data.Time.Duration (Milliseconds)
 import Effect (Effect)
 import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn1, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
+import Node.EventEmitter (EventHandle(..))
+import Node.EventEmitter.UtilTypes (EventHandle0, EventHandle1, EventHandle3, EventHandle2)
 import Node.FS (FileDescriptor)
-import Node.Http2.Types (Headers, Http2Session, Http2Stream)
-import Node.TLS.Types (Client, Server)
+import Node.Http2.Flags (BitwiseFlag)
+import Node.Http2.Types (ErrorCode(..), FrameType, Headers, Http2Session, Http2Stream, Settings, StreamId(..))
 import Node.Path (FilePath)
 import Node.Stream (Duplex)
+import Node.TLS.Types (Client, Server)
 import Partial.Unsafe (unsafeCrashWith)
+import Safe.Coerce (coerce)
 import Unsafe.Coerce (unsafeCoerce)
 
 toDuplex :: forall endpoint. Http2Stream endpoint -> Duplex
 toDuplex = unsafeCoerce
 
-onAbort :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
-onAbort s cb = runEffectFn2 onAbortImpl s cb
+abortedHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+abortedHandle = EventHandle "aborted" identity
 
-foreign import onAbortImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) Unit
+closeHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+closeHandle = EventHandle "close" identity
 
-onClose :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
-onClose s cb = runEffectFn2 onCloseImpl s cb
+errorHandle :: forall endpoint. EventHandle1 (Http2Stream endpoint) Error
+errorHandle = EventHandle "error" mkEffectFn1
 
-foreign import onCloseImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
+frameErrorHandle :: forall endpoint. EventHandle3 (Http2Stream endpoint) FrameType ErrorCode StreamId
+frameErrorHandle = EventHandle "frameError" \cb -> mkEffectFn3 \a b c -> cb a b c
 
-onError :: forall endpoint. Http2Stream endpoint -> (Error -> Effect Unit) -> Effect Unit
-onError s cb = runEffectFn2 onErrorImpl s $ mkEffectFn1 cb
+readyHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+readyHandle = EventHandle "ready" identity
 
-foreign import onErrorImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (EffectFn1 Error Unit) (Unit)
+timeoutHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+timeoutHandle = EventHandle "timeout" identity
 
-onFrameError :: forall endpoint. Http2Stream endpoint -> (Int -> Int -> Int -> Effect Unit) -> Effect Unit
-onFrameError s cb = runEffectFn2 onFrameErrorImpl s $ mkEffectFn3 cb
+trailersHandle :: forall endpoint. EventHandle2 (Http2Stream endpoint) Settings BitwiseFlag
+trailersHandle = EventHandle "trailers" \cb -> mkEffectFn2 \a b -> cb a b
 
-foreign import onFrameErrorImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (EffectFn3 Int Int Int Unit) (Unit)
-
-onReady :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
-onReady s cb = runEffectFn2 onReadyImpl s cb
-
-foreign import onReadyImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
-
-onTimeout :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
-onTimeout s cb = runEffectFn2 onTimeoutImpl s cb
-
-foreign import onTimeoutImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
-
-onTrailers :: forall endpoint. Http2Stream endpoint -> (Headers -> Int -> Effect Unit) -> Effect Unit
-onTrailers s cb = runEffectFn2 onTrailersImpl s $ mkEffectFn2 cb
-
-foreign import onTrailersImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (EffectFn2 Headers Int Unit) (Unit)
-
-onWantTrailers :: forall endpoint. Http2Stream endpoint -> Effect Unit -> Effect Unit
-onWantTrailers s cb = runEffectFn2 onWantTrailersImpl s cb
-
-foreign import onWantTrailersImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (Effect Unit) (Unit)
+wantTrailersHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+wantTrailersHandle = EventHandle "wantTrailers" identity
 
 bufferSize :: forall endpoint. Http2Stream endpoint -> Effect Int
 bufferSize s = runEffectFn1 bufferSizeImpl s
 
 foreign import bufferSizeImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Int)
 
-close :: forall endpoint. Http2Stream endpoint -> Int -> Effect Unit
-close s code = runEffectFn2 closeImpl s code
+close :: forall endpoint. Http2Stream endpoint -> ErrorCode -> Effect Unit
+close s code = runEffectFn2 closeImpl s (coerce code)
 
 foreign import closeImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) Int (Unit)
 
@@ -129,8 +117,8 @@ endAfterHeaders s = runEffectFn1 endAfterHeadersImpl s
 
 foreign import endAfterHeadersImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Boolean)
 
-id :: forall endpoint. Http2Stream endpoint -> Effect (Maybe Int)
-id s = map toMaybe $ runEffectFn1 idImpl s
+id :: forall endpoint. Http2Stream endpoint -> Effect (Maybe StreamId)
+id s = map (coerce <<< toMaybe) $ runEffectFn1 idImpl s
 
 foreign import idImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Nullable Int)
 
@@ -156,8 +144,8 @@ priority s p = runEffectFn2 priorityImpl s $ p { weight = clamp 1 256 p.weight }
 
 foreign import priorityImpl :: forall endpoint. EffectFn2 (Http2Stream endpoint) (PriorityOptions) (Unit)
 
-rstCode :: forall endpoint. Http2Stream endpoint -> Effect (Maybe Int)
-rstCode s = map toMaybe $ runEffectFn1 rstCodeImpl s
+rstCode :: forall endpoint. Http2Stream endpoint -> Effect (Maybe ErrorCode)
+rstCode s = map (coerce <<< toMaybe) $ runEffectFn1 rstCodeImpl s
 
 foreign import rstCodeImpl :: forall endpoint. EffectFn1 (Http2Stream endpoint) (Nullable Int)
 
@@ -194,7 +182,7 @@ foreign import setTimeoutImpl :: forall endpoint. EffectFn3 (Http2Stream endpoin
 -- | `weight` <number> The priority weight of this Http2Stream peer.
 type Http2StreamState =
   { localWindowSize :: Int
-  , state :: Int
+  , state :: BitwiseFlag
   , localClose :: Int
   , remoteClose :: Int
   , sumDependencyWeight :: Int
@@ -295,23 +283,15 @@ respondWithFile s fp h o = runEffectFn4 respondWithFileImpl s fp h o
 
 foreign import respondWithFileImpl :: EffectFn4 (Http2Stream Server) (FilePath) (Headers) (RespondWithFileOptions) (Unit)
 
-onContinue :: Http2Stream Client -> Effect Unit -> Effect Unit
-onContinue s cb = runEffectFn2 onContinueImpl s cb
+continueHandle :: EventHandle0 (Http2Stream Client)
+continueHandle = EventHandle "continue" identity
 
-foreign import onContinueImpl :: EffectFn2 (Http2Stream Client) (Effect Unit) (Unit)
+headersHandle :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
+headersHandle = EventHandle "headers" \cb -> mkEffectFn2 \a b -> cb a b
 
-onHeaders :: Http2Stream Client -> (Headers -> Int -> Effect Unit) -> Effect Unit
-onHeaders s cb = runEffectFn2 onHeadersImpl s $ mkEffectFn2 cb
+pushHandle :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
+pushHandle = EventHandle "push" \cb -> mkEffectFn2 \a b -> cb a b
 
-foreign import onHeadersImpl :: EffectFn2 (Http2Stream Client) (EffectFn2 Headers Int Unit) (Unit)
-
-onPush :: Http2Stream Client -> (Headers -> Int -> Effect Unit) -> Effect Unit
-onPush s cb = runEffectFn2 onPushImpl s $ mkEffectFn2 cb
-
-foreign import onPushImpl :: EffectFn2 (Http2Stream Client) (EffectFn2 Headers Int Unit) (Unit)
-
-onResponse :: Http2Stream Client -> (Headers -> Int -> Effect Unit) -> Effect Unit
-onResponse s cb = runEffectFn2 onResponseImpl s $ mkEffectFn2 cb
-
-foreign import onResponseImpl :: EffectFn2 (Http2Stream Client) (EffectFn2 Headers Int Unit) (Unit)
+responseHandle :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
+responseHandle = EventHandle "response" \cb -> mkEffectFn2 \a b -> cb a b
 

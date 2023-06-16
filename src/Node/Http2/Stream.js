@@ -1,11 +1,3 @@
-export const onAbortImpl = (stream, cb) => stream.on("abort", cb);
-export const onCloseImpl = (stream, cb) => stream.on("close", cb);
-export const onErrorImpl = (stream, cb) => stream.on("error", cb);
-export const onFrameErrorImpl = (stream, cb) => stream.on("frameError", cb);
-export const onReadyImpl = (stream, cb) => stream.on("ready", cb);
-export const onTimeoutImpl = (stream, cb) => stream.on("timeout", cb);
-export const onTrailersImpl = (stream, cb) => stream.on("trailers", cb);
-export const onWantTrailersImpl = (stream, cb) => stream.on("wantTrailers", cb);
 export const bufferSizeImpl = (stream) => stream.bufferSize;
 export const closeImpl = (stream, code) => stream.close(code);
 export const closedImpl = (stream) => stream.closed;
@@ -34,10 +26,5 @@ export const respondImpl = (s, headers, options) => s.respond(headers, options);
 export const respondWithFdImpl = (s, fd, h, o) => s.respondWithFd(fd, h, o);
 export const respondWithFileImpl = (s, file, headers, o) => s.respondWithFile(file, headers, o);
 
-
 // client
-export const onContinueImpl = (s, cb) => s.on("continue", cb);
-export const onHeadersImpl = (s, cb) => s.on("headers", cb);
-export const onPushImpl = (s, cb) => s.on("push", cb);
-export const onResponseImpl = (s, cb) => s.on("response", cb);
 
