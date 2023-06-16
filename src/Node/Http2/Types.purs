@@ -16,22 +16,6 @@ foreign import data Http2Stream :: Endpoint -> Type
 
 foreign import data Headers :: Type
 
-newtype FrameType = FrameType Int
-
-derive instance Eq FrameType
-derive instance Ord FrameType
-derive instance Newtype FrameType _
-derive instance Generic FrameType _
-derive newtype instance Show FrameType
-
-newtype ErrorCode = ErrorCode Int
-
-derive instance Eq ErrorCode
-derive instance Ord ErrorCode
-derive instance Newtype ErrorCode _
-derive instance Generic ErrorCode _
-derive newtype instance Show ErrorCode
-
 newtype StreamId = StreamId Int
 
 derive instance Eq StreamId
@@ -39,6 +23,11 @@ derive instance Ord StreamId
 derive instance Newtype StreamId _
 derive instance Generic StreamId _
 derive newtype instance Show StreamId
+
+-- | A StreamId of 0, indicating the ID does not refer to a stream
+-- | but to the session's connection as a whole.
+connectionId :: StreamId
+connectionId = StreamId 0
 
 -- | `headerTableSize` <number> Specifies the maximum number of bytes used for header compression. The minimum allowed value is 0. The maximum allowed value is 232-1. Default: 4096.
 -- | `enablePush` <boolean> Specifies true if HTTP/2 Push Streams are to be permitted on the Http2Session instances. Default: true.

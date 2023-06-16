@@ -15,7 +15,7 @@ import Node.Encoding (Encoding(..))
 import Node.EventEmitter (on)
 import Node.FS.Sync as FS
 import Node.Http2.Client as Client
-import Node.Http2.Constants.NGHTTP2 as NGHTTP2
+import Node.Http2.ErrorCode as ErrorCode
 import Node.Http2.Server as Server
 import Node.Http2.Session as Session
 import Node.Http2.Stream (toDuplex)
@@ -68,12 +68,12 @@ main = do
       { endStream: false -- if this is true, then Stream.write/end produces error
       , waitForTrailers: true
       }
-    -- H2Stream.close stream NGHTTP2.noError
+    -- H2Stream.close stream ErrorCode.noError
     Stream.writeStringCb_ duplex UTF8 "hello from server" \err -> do
       log (unsafeCoerce err)
       Stream.end' duplex \_ -> do
         log $ "server - onStream - closing for id: " <> show streamId
-        H2Stream.close stream NGHTTP2.noError
+        H2Stream.close stream ErrorCode.noError
 
   on Server.timeoutHandle server.tls do
     log "onTimeout"
@@ -113,7 +113,7 @@ main = do
         buffer <- Buffer.concat chunks :: Effect Buffer.Buffer
         str <- Buffer.toString UTF8 buffer :: Effect String
         log $ "client - onResponse body: " <> show str
-        H2Stream.close stream NGHTTP2.noError
+        H2Stream.close stream ErrorCode.noError
         Session.destroy session
         NServer.close server.net
 

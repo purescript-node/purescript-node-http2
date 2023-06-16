@@ -1,6 +1,17 @@
-module Node.Http2.Constants.NGHTTP2 where
+module Node.Http2.ErrorCode where
 
-import Node.Http2.Types (ErrorCode)
+import Prelude
+
+import Data.Generic.Rep (class Generic)
+import Data.Newtype (class Newtype)
+
+newtype ErrorCode = ErrorCode Int
+
+derive instance Eq ErrorCode
+derive instance Ord ErrorCode
+derive instance Newtype ErrorCode _
+derive instance Generic ErrorCode _
+derive newtype instance Show ErrorCode
 
 foreign import noError :: ErrorCode
 foreign import protocolError :: ErrorCode
