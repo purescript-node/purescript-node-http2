@@ -9,7 +9,9 @@
   , "foldable-traversable"
   , "foreign-object"
   , "functions"
+  , "integers"
   , "maybe"
+  , "newtype"
   , "node-buffer"
   , "node-event-emitter"
   , "node-fs"
@@ -21,6 +23,7 @@
   , "partial"
   , "prelude"
   , "refs"
+  , "safe-coerce"
   , "spec"
   , "unsafe-coerce"
   ]

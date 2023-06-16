@@ -1,11 +1,16 @@
 { name = "node-http2"
 , dependencies =
-  [ "datetime"
+  [ "arrays"
+  , "datetime"
   , "effect"
   , "either"
   , "exceptions"
+  , "foldable-traversable"
+  , "foreign-object"
   , "functions"
+  , "integers"
   , "maybe"
+  , "newtype"
   , "node-buffer"
   , "node-event-emitter"
   , "node-fs"
@@ -16,6 +21,7 @@
   , "nullable"
   , "partial"
   , "prelude"
+  , "safe-coerce"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
