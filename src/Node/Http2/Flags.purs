@@ -5,6 +5,7 @@
 module Node.Http2.Flags
   ( BitwiseFlag -- constructor intentionally not exported
   , printFlags
+  , printFlags'
   , enable
   , isDisabled
   , isEnabled
@@ -34,7 +35,10 @@ derive instance Eq BitwiseFlag
 derive newtype instance Show BitwiseFlag
 
 printFlags :: BitwiseFlag -> String
-printFlags input = Array.intercalate "; "
+printFlags = printFlags' "; "
+
+printFlags' :: String -> BitwiseFlag -> String
+printFlags' sep input = Array.intercalate sep
   [ "END_STREAM/ACK: " <> show (isEnabled input endStream)
   , "END_STREAM: " <> show (isEnabled input endStream)
   , "END_HEADERS: " <> show (isEnabled input endHeaders)

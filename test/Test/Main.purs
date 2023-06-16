@@ -14,6 +14,7 @@ import Node.EventEmitter (on)
 import Node.FS.Sync as FS
 import Node.Http2.Client as Client
 import Node.Http2.ErrorCode as ErrorCode
+import Node.Http2.Flags (printFlags)
 import Node.Http2.Headers (printHeaders')
 import Node.Http2.Server as Server
 import Node.Http2.Session as Session
@@ -59,7 +60,7 @@ main = do
     streamId <- H2Stream.id stream
     log $ "server - onStream for id: " <> show streamId
     log $ printHeaders' "\n" headers
-    log $ "server - onStream - Flags: " <> show flags
+    log $ "server - onStream - Flags: " <> printFlags flags
     log $ "server - onStream - Raw Headers: " <> show rawHeaders
     let duplex = H2Stream.toDuplex stream
     H2Stream.respond stream (unsafeCoerce { "an-http-header": "value" })
@@ -101,7 +102,7 @@ main = do
     on H2Stream.responseHandle stream \headers flags -> do
       log "client - onResponse"
       log $ printHeaders' "\n" headers
-      log $ "Flags: " <> show flags
+      log $ "Flags: " <> printFlags flags
       chunksRef <- Ref.new []
       on Stream.dataHandle duplex \buf ->
         Ref.modify_ (flip Array.snoc buf) chunksRef
