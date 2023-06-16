@@ -3,12 +3,10 @@ module Test.Main where
 import Prelude
 
 import Data.Array as Array
-import Data.FoldableWithIndex (forWithIndex_)
 import Effect (Effect)
 import Effect.Class.Console (log)
 import Effect.Exception as Exception
 import Effect.Ref as Ref
-import Foreign.Object (Object)
 import Node.Buffer as Buffer
 import Node.Buffer.Immutable (ImmutableBuffer)
 import Node.Encoding (Encoding(..))
@@ -16,6 +14,7 @@ import Node.EventEmitter (on)
 import Node.FS.Sync as FS
 import Node.Http2.Client as Client
 import Node.Http2.ErrorCode as ErrorCode
+import Node.Http2.Headers (printHeaders')
 import Node.Http2.Server as Server
 import Node.Http2.Session as Session
 import Node.Http2.Stream (toDuplex)
@@ -59,8 +58,7 @@ main = do
   on Server.streamHandle server.http2 \stream headers flags rawHeaders -> do
     streamId <- H2Stream.id stream
     log $ "server - onStream for id: " <> show streamId
-    forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
-      log $ k <> ": " <> v
+    log $ printHeaders' "\n" headers
     log $ "server - onStream - Flags: " <> show flags
     log $ "server - onStream - Raw Headers: " <> show rawHeaders
     let duplex = H2Stream.toDuplex stream
@@ -102,8 +100,7 @@ main = do
     Stream.end duplex
     on H2Stream.responseHandle stream \headers flags -> do
       log "client - onResponse"
-      forWithIndex_ (unsafeCoerce headers :: Object String) \k v ->
-        log $ k <> ": " <> v
+      log $ printHeaders' "\n" headers
       log $ "Flags: " <> show flags
       chunksRef <- Ref.new []
       on Stream.dataHandle duplex \buf ->

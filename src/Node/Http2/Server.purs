@@ -72,7 +72,7 @@ sessionHandle = EventHandle "session" mkEffectFn1
 sessionErrorHandle :: EventHandle2 Http2SecureServer Error (Http2Session Server)
 sessionErrorHandle = EventHandle "sessionError" \cb -> mkEffectFn2 \a b -> cb a b
 
-streamHandle :: EventHandle4 Http2SecureServer (Http2Stream Server) Headers BitwiseFlag (Array String)
+streamHandle :: EventHandle4 Http2SecureServer (Http2Stream Server) (Headers) BitwiseFlag (Array String)
 streamHandle = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
 
 timeoutHandle :: EventHandle0 TlsServer

@@ -52,7 +52,12 @@ type Settings =
 -- | `Http2SecureServer` extends `TLS.Server`, `Net.Server` and `EventEmitter`
 foreign import data Http2SecureServer :: Type
 
+-- | Type is provided below, but the corresponding bindings for the Compatibility API
+-- | is not provided.
 foreign import data Http2ServerRequest :: Type
+
+-- | Type is provided below, but the corresponding bindings for the Compatibility API
+-- | is not provided.
 foreign import data Http2ServerResponse :: Type
 
 -- | `allowHTTP1` <boolean> Incoming client connections that do not support HTTP/2 will be downgraded to HTTP/1.x when set to true. See the 'unknownProtocol' event. See ALPN negotiation. Default: false.
