@@ -6,6 +6,7 @@ import Prelude
 
 import Data.Generic.Rep (class Generic)
 import Data.Newtype (class Newtype)
+import Node.Http2.PaddingStrategy (PaddingStrategy)
 import Node.TLS.Types (Endpoint)
 
 -- | `Http2Session` extends `EventEmitter`
@@ -81,7 +82,7 @@ type Http2CreateSecureServerOptions r =
   , maxHeaderListPairs :: Int
   , maxOutstandingPings :: Int
   , maxSendHeaderBlockLength :: Int
-  , paddingStrategy :: Int
+  , paddingStrategy :: PaddingStrategy
   , peerMaxConcurrentStreams :: Int
   , maxSessionInvalidFrames :: Int
   , maxSessionRejectedStreams :: Int
