@@ -58,6 +58,9 @@ jobs:
 
       - name: Run tests
         run: |
+          chmod +x test/regen-pem-files.sh
+          sh test/regen-pem-files.sh
+
           npx spago -x test.dhall test
 
       - name: Check Formatting
