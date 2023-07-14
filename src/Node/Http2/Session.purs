@@ -1,15 +1,15 @@
 module Node.Http2.Session
   ( toEventEmitter
-  , closeHandle
-  , connectHandle
-  , errorHandle
-  , frameErrorHandle
-  , goAwayHandle
-  , localSettingsHandle
-  , pingHandle
-  , remoteSettingsHandle
-  , streamHandle
-  , timeoutHandle
+  , closeH
+  , connectH
+  , errorH
+  , frameErrorH
+  , goAwayH
+  , localSettingsH
+  , pingH
+  , remoteSettingsH
+  , streamH
+  , timeoutH
   , alpnProtocol
   , close
   , closed
@@ -72,40 +72,40 @@ import Unsafe.Coerce (unsafeCoerce)
 toEventEmitter :: forall endpoint. Http2Session endpoint -> EventEmitter
 toEventEmitter = unsafeCoerce
 
-closeHandle :: forall endpoint. EventHandle0 (Http2Session endpoint)
-closeHandle = EventHandle "close" identity
+closeH :: forall endpoint. EventHandle0 (Http2Session endpoint)
+closeH = EventHandle "close" identity
 
-connectHandle :: forall endpoint. EventHandle2 (Http2Session endpoint) (Http2Session endpoint) (Socket TCP)
-connectHandle = EventHandle "connect" \cb -> mkEffectFn2 \a b -> cb a b
+connectH :: forall endpoint. EventHandle2 (Http2Session endpoint) (Http2Session endpoint) (Socket TCP)
+connectH = EventHandle "connect" \cb -> mkEffectFn2 \a b -> cb a b
 
-errorHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Error
-errorHandle = EventHandle "error" mkEffectFn1
+errorH :: forall endpoint. EventHandle1 (Http2Session endpoint) Error
+errorH = EventHandle "error" mkEffectFn1
 
-frameErrorHandle :: forall endpoint. EventHandle3 (Http2Session endpoint) FrameType ErrorCode StreamId
-frameErrorHandle = EventHandle "frameError" \cb -> mkEffectFn3 \a b c -> cb a b c
+frameErrorH :: forall endpoint. EventHandle3 (Http2Session endpoint) FrameType ErrorCode StreamId
+frameErrorH = EventHandle "frameError" \cb -> mkEffectFn3 \a b c -> cb a b c
 
-goAwayHandle
+goAwayH
   :: forall endpoint
    . EventHandle
        (Http2Session endpoint)
        (ErrorCode -> StreamId -> (Maybe Buffer) -> Effect Unit)
        (EffectFn3 ErrorCode StreamId (Nullable Buffer) Unit)
-goAwayHandle = EventHandle "goAway" \cb -> mkEffectFn3 \a b c -> cb a b (toMaybe c)
+goAwayH = EventHandle "goAway" \cb -> mkEffectFn3 \a b c -> cb a b (toMaybe c)
 
-localSettingsHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Settings
-localSettingsHandle = EventHandle "localSettings" mkEffectFn1
+localSettingsH :: forall endpoint. EventHandle1 (Http2Session endpoint) Settings
+localSettingsH = EventHandle "localSettings" mkEffectFn1
 
-pingHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Buffer
-pingHandle = EventHandle "ping" mkEffectFn1
+pingH :: forall endpoint. EventHandle1 (Http2Session endpoint) Buffer
+pingH = EventHandle "ping" mkEffectFn1
 
-remoteSettingsHandle :: forall endpoint. EventHandle1 (Http2Session endpoint) Settings
-remoteSettingsHandle = EventHandle "remoteSettings" mkEffectFn1
+remoteSettingsH :: forall endpoint. EventHandle1 (Http2Session endpoint) Settings
+remoteSettingsH = EventHandle "remoteSettings" mkEffectFn1
 
-streamHandle :: forall endpoint. EventHandle4 (Http2Session endpoint) (Http2Stream endpoint) Headers BitwiseFlag (Array String)
-streamHandle = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
+streamH :: forall endpoint. EventHandle4 (Http2Session endpoint) (Http2Stream endpoint) Headers BitwiseFlag (Array String)
+streamH = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
 
-timeoutHandle :: forall endpoint. EventHandle0 (Http2Session endpoint)
-timeoutHandle = EventHandle "timeout" identity
+timeoutH :: forall endpoint. EventHandle0 (Http2Session endpoint)
+timeoutH = EventHandle "timeout" identity
 
 alpnProtocol :: forall endpoint. Http2Session endpoint -> Effect (Maybe String)
 alpnProtocol session = map toMaybe $ runEffectFn1 alpnProtocolImpl session

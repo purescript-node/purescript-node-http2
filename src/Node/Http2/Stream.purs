@@ -1,13 +1,13 @@
 module Node.Http2.Stream
   ( toDuplex
-  , abortedHandle
-  , closeHandle
-  , errorHandle
-  , frameErrorHandle
-  , readyHandle
-  , timeoutHandle
-  , trailersHandle
-  , wantTrailersHandle
+  , abortedH
+  , closeH
+  , errorH
+  , frameErrorH
+  , readyH
+  , timeoutH
+  , trailersH
+  , wantTrailersH
   , bufferSize
   , close
   , closed
@@ -38,10 +38,10 @@ module Node.Http2.Stream
   , respondWithFd
   , RespondWithFileOptions
   , respondWithFile
-  , continueHandle
-  , headersHandle
-  , pushHandle
-  , responseHandle
+  , continueH
+  , headersH
+  , pushH
+  , responseH
   ) where
 
 import Prelude
@@ -70,29 +70,29 @@ import Unsafe.Coerce (unsafeCoerce)
 toDuplex :: forall endpoint. Http2Stream endpoint -> Duplex
 toDuplex = unsafeCoerce
 
-abortedHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
-abortedHandle = EventHandle "aborted" identity
+abortedH :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+abortedH = EventHandle "aborted" identity
 
-closeHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
-closeHandle = EventHandle "close" identity
+closeH :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+closeH = EventHandle "close" identity
 
-errorHandle :: forall endpoint. EventHandle1 (Http2Stream endpoint) Error
-errorHandle = EventHandle "error" mkEffectFn1
+errorH :: forall endpoint. EventHandle1 (Http2Stream endpoint) Error
+errorH = EventHandle "error" mkEffectFn1
 
-frameErrorHandle :: forall endpoint. EventHandle3 (Http2Stream endpoint) FrameType ErrorCode StreamId
-frameErrorHandle = EventHandle "frameError" \cb -> mkEffectFn3 \a b c -> cb a b c
+frameErrorH :: forall endpoint. EventHandle3 (Http2Stream endpoint) FrameType ErrorCode StreamId
+frameErrorH = EventHandle "frameError" \cb -> mkEffectFn3 \a b c -> cb a b c
 
-readyHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
-readyHandle = EventHandle "ready" identity
+readyH :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+readyH = EventHandle "ready" identity
 
-timeoutHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
-timeoutHandle = EventHandle "timeout" identity
+timeoutH :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+timeoutH = EventHandle "timeout" identity
 
-trailersHandle :: forall endpoint. EventHandle2 (Http2Stream endpoint) Settings BitwiseFlag
-trailersHandle = EventHandle "trailers" \cb -> mkEffectFn2 \a b -> cb a b
+trailersH :: forall endpoint. EventHandle2 (Http2Stream endpoint) Settings BitwiseFlag
+trailersH = EventHandle "trailers" \cb -> mkEffectFn2 \a b -> cb a b
 
-wantTrailersHandle :: forall endpoint. EventHandle0 (Http2Stream endpoint)
-wantTrailersHandle = EventHandle "wantTrailers" identity
+wantTrailersH :: forall endpoint. EventHandle0 (Http2Stream endpoint)
+wantTrailersH = EventHandle "wantTrailers" identity
 
 bufferSize :: forall endpoint. Http2Stream endpoint -> Effect Int
 bufferSize s = runEffectFn1 bufferSizeImpl s
@@ -285,15 +285,15 @@ respondWithFile s fp h o = runEffectFn4 respondWithFileImpl s fp h o
 
 foreign import respondWithFileImpl :: EffectFn4 (Http2Stream Server) (FilePath) (Headers) (RespondWithFileOptions) (Unit)
 
-continueHandle :: EventHandle0 (Http2Stream Client)
-continueHandle = EventHandle "continue" identity
+continueH :: EventHandle0 (Http2Stream Client)
+continueH = EventHandle "continue" identity
 
-headersHandle :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
-headersHandle = EventHandle "headers" \cb -> mkEffectFn2 \a b -> cb a b
+headersH :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
+headersH = EventHandle "headers" \cb -> mkEffectFn2 \a b -> cb a b
 
-pushHandle :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
-pushHandle = EventHandle "push" \cb -> mkEffectFn2 \a b -> cb a b
+pushH :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
+pushH = EventHandle "push" \cb -> mkEffectFn2 \a b -> cb a b
 
-responseHandle :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
-responseHandle = EventHandle "response" \cb -> mkEffectFn2 \a b -> cb a b
+responseH :: EventHandle2 (Http2Stream Client) Headers BitwiseFlag
+responseH = EventHandle "response" \cb -> mkEffectFn2 \a b -> cb a b
 

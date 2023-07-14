@@ -8,9 +8,8 @@ import Effect.Class.Console (log)
 import Effect.Exception as Exception
 import Effect.Ref as Ref
 import Node.Buffer as Buffer
-import Node.Buffer.Immutable (ImmutableBuffer)
 import Node.Encoding (Encoding(..))
-import Node.EventEmitter (on)
+import Node.EventEmitter (on_)
 import Node.FS.Sync as FS
 import Node.Http2.Client as Client
 import Node.Http2.ErrorCode as ErrorCode
@@ -24,6 +23,7 @@ import Node.Http2.Types (Http2Session)
 import Node.Net.Server as NServer
 import Node.Path as Path
 import Node.Stream as Stream
+import Node.TLS.Server as Tls
 import Unsafe.Coerce (unsafeCoerce)
 
 logWith :: String -> String -> Effect Unit
@@ -40,20 +40,23 @@ main = do
     { key: [ privateKey ]
     , cert: [ cert ]
     }
-  on Server.checkContinueHandle server.http2 \req res -> do
+  let
+    tlsServer = Server.toTlsServer server
+    tcpServer = Tls.toTcpServer tlsServer
+  server # on_ Server.checkContinueH \req res -> do
     log "server - onCheckContinue"
-  on NServer.connectionHandle server.net \duplex -> do
+  tcpServer # on_ NServer.connectionH \duplex -> do
     log "server - onConnection"
-  on Server.sessionHandle server.http2 \session -> do
+  server # on_ Server.sessionH \session -> do
     log "server - onSession"
     log "Testing properties for any thrown errors"
     printHttp2SessionState session
 
-  on Server.sessionErrorHandle server.http2 \err session -> do
+  server # on_ Server.sessionErrorH \err session -> do
     log "server - onSessionError"
     log (unsafeCoerce err)
     printHttp2SessionState session
-  on Server.streamHandle server.http2 \stream headers flags rawHeaders -> do
+  server # on_ Server.streamH \stream headers flags rawHeaders -> do
     streamId <- H2Stream.id stream
     log $ "server - onStream for id: " <> show streamId
     log $ printHeaders' "\n" headers
@@ -65,28 +68,28 @@ main = do
       , waitForTrailers: true
       }
     -- H2Stream.close stream ErrorCode.noError
-    Stream.writeStringCb_ duplex UTF8 "hello from server" \err -> do
+    void $ Stream.writeString' duplex UTF8 "hello from server" \err -> do
       log (unsafeCoerce err)
       Stream.end' duplex \_ -> do
         log $ "server - onStream - closing for id: " <> show streamId
         H2Stream.close stream ErrorCode.noError
 
-  on Server.timeoutHandle server.tls do
+  tlsServer # on_ Server.timeoutH do
     log "onTimeout"
-  on Server.unknownProtocolHandle server.http2 \duplex -> do
+  server # on_ Server.unknownProtocolH \duplex -> do
     log "onUnknownProtocol"
   -- https://stackoverflow.com/a/63173619
   -- "In UNIX-like systems, non-root users are unable to bind to ports lower than 1024."
   let httpsPort = 8443
-  NServer.listenTcp server.net
+  NServer.listenTcp tcpServer
     { port: httpsPort
     }
-  on NServer.listeningHandle server.net do
+  tcpServer # on_ NServer.listeningH do
     log "server listening"
     session <- Client.connect' ("https://localhost:" <> show httpsPort)
       { ca: [ cert ]
       }
-    on Session.errorHandle session \error ->
+    session # on_ Session.errorH \error ->
       log $ "Client session encountered error: " <> Exception.message error
     stream <- Session.request session
       ( unsafeCoerce
@@ -96,21 +99,21 @@ main = do
       )
     let duplex = toDuplex stream
     Stream.end duplex
-    on H2Stream.responseHandle stream \headers flags -> do
+    stream # on_ H2Stream.responseH \headers flags -> do
       log "client - onResponse"
       log $ printHeaders' "\n" headers
       log $ "Flags: " <> printFlags flags
       chunksRef <- Ref.new []
-      on Stream.dataHandle duplex \buf ->
+      duplex # on_ Stream.dataH \buf ->
         Ref.modify_ (flip Array.snoc buf) chunksRef
-      on Stream.endHandle duplex do
+      duplex # on_ Stream.endH do
         chunks <- Ref.read chunksRef
         buffer <- Buffer.concat chunks :: Effect Buffer.Buffer
         str <- Buffer.toString UTF8 buffer :: Effect String
         log $ "client - onResponse body: " <> show str
         H2Stream.close stream ErrorCode.noError
         Session.destroy session
-        NServer.close server.net
+        NServer.close tcpServer
 
 printHttp2SessionState :: forall endpoint. Http2Session endpoint -> Effect Unit
 printHttp2SessionState session = do

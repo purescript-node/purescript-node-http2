@@ -1,13 +1,13 @@
 module Node.Http2.Server
   ( toTlsServer
   , createSecureServer
-  , checkContinueHandle
-  , requestHandle
-  , sessionHandle
-  , sessionErrorHandle
-  , streamHandle
-  , timeoutHandle
-  , unknownProtocolHandle
+  , checkContinueH
+  , requestH
+  , sessionH
+  , sessionErrorH
+  , streamH
+  , timeoutH
+  , unknownProtocolH
   , setTimeout
   , timeout
   , updateSettings
@@ -41,26 +41,26 @@ createSecureServer options = runEffectFn1 createSecureServerImpl options
 
 foreign import createSecureServerImpl :: forall r. EffectFn1 { | r } (Http2SecureServer)
 
-checkContinueHandle :: EventHandle2 Http2SecureServer Http2ServerRequest Http2ServerResponse
-checkContinueHandle = EventHandle "checkContinue" \cb -> mkEffectFn2 \a b -> cb a b
+checkContinueH :: EventHandle2 Http2SecureServer Http2ServerRequest Http2ServerResponse
+checkContinueH = EventHandle "checkContinue" \cb -> mkEffectFn2 \a b -> cb a b
 
-requestHandle :: EventHandle2 Http2SecureServer Http2ServerRequest Http2ServerResponse
-requestHandle = EventHandle "request" \cb -> mkEffectFn2 \a b -> cb a b
+requestH :: EventHandle2 Http2SecureServer Http2ServerRequest Http2ServerResponse
+requestH = EventHandle "request" \cb -> mkEffectFn2 \a b -> cb a b
 
-sessionHandle :: EventHandle1 Http2SecureServer (Http2Session Server)
-sessionHandle = EventHandle "session" mkEffectFn1
+sessionH :: EventHandle1 Http2SecureServer (Http2Session Server)
+sessionH = EventHandle "session" mkEffectFn1
 
-sessionErrorHandle :: EventHandle2 Http2SecureServer Error (Http2Session Server)
-sessionErrorHandle = EventHandle "sessionError" \cb -> mkEffectFn2 \a b -> cb a b
+sessionErrorH :: EventHandle2 Http2SecureServer Error (Http2Session Server)
+sessionErrorH = EventHandle "sessionError" \cb -> mkEffectFn2 \a b -> cb a b
 
-streamHandle :: EventHandle4 Http2SecureServer (Http2Stream Server) (Headers) BitwiseFlag (Array String)
-streamHandle = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
+streamH :: EventHandle4 Http2SecureServer (Http2Stream Server) (Headers) BitwiseFlag (Array String)
+streamH = EventHandle "stream" \cb -> mkEffectFn4 \a b c d -> cb a b c d
 
-timeoutHandle :: EventHandle0 TlsServer
-timeoutHandle = EventHandle "timeout" identity
+timeoutH :: EventHandle0 TlsServer
+timeoutH = EventHandle "timeout" identity
 
-unknownProtocolHandle :: EventHandle1 Http2SecureServer Duplex
-unknownProtocolHandle = EventHandle "unknownProtocol" mkEffectFn1
+unknownProtocolH :: EventHandle1 Http2SecureServer Duplex
+unknownProtocolH = EventHandle "unknownProtocol" mkEffectFn1
 
 setTimeout :: Http2SecureServer -> Milliseconds -> Effect Http2SecureServer
 setTimeout s ms = runEffectFn2 setTimeoutImpl s ms
