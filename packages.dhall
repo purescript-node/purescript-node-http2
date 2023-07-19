@@ -3,7 +3,7 @@ let upstream =
         sha256:cb9995a97812b86f41f6d8efe4be981b55cd924252002f256084cfe2836bdfd6
 
 in  upstream
-      with node-event-emitter.version = "b283c3eb6abc32a88fd8876af746b9548e78d93f"
+      with node-event-emitter.version = "v3.0.0"
       with node-event-emitter.dependencies =
         [ "effect"
         , "either"
@@ -13,7 +13,7 @@ in  upstream
         , "prelude"
         , "unsafe-coerce"
         ]
-      with node-streams.version = "684041e14e56c75c0bf49db0e556aec6d0248e5a"
+      with node-streams.version = "v8.0.0"
       with node-streams.dependencies =
         [ "aff"
         , "effect"
@@ -25,7 +25,7 @@ in  upstream
         , "prelude"
         , "unsafe-coerce"
         ]
-      with node-fs.version = "be0a346f4b72826947a124486c299b842c5e2601"
+      with node-fs.version = "v9.0.0"
       with node-fs.dependencies =
         [ "datetime"
         , "effect"
@@ -45,7 +45,7 @@ in  upstream
         , "strings"
         , "unsafe-coerce"
         ]
-      with node-net.version = "b0a93e2f27144386a31039aef9781b7da17e048f"
+      with node-net.version = "v5.0.0"
       with node-net.dependencies =
         [ "console"
         , "datetime"
@@ -79,5 +79,5 @@ in  upstream
             , "unsafe-coerce"
             ]
         , repo = "https://github.com/JordanMartinez/purescript-node-tls.git"
-        , version = "6ca365ac80c1dd43b93adc9e0a1ded6389b8a7c3"
+        , version = "v0.1.0"
         }
