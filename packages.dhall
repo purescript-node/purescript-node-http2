@@ -13,6 +13,15 @@ in  upstream
         , "prelude"
         , "unsafe-coerce"
         ]
+      with node-buffer.version = "v9.0.0"
+      with node-buffer.dependencies =
+        [ "arraybuffer-types"
+        , "effect"
+        , "maybe"
+        , "st"
+        , "unsafe-coerce"
+        , "nullable"
+        ]
       with node-streams.version = "v9.0.0"
       with node-streams.dependencies =
         [ "aff"
@@ -79,5 +88,5 @@ in  upstream
             , "unsafe-coerce"
             ]
         , repo = "https://github.com/JordanMartinez/purescript-node-tls.git"
-        , version = "v0.3.0"
+        , version = "v0.3.1"
         }
