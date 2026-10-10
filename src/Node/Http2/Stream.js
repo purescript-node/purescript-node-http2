@@ -21,10 +21,10 @@ export const additionalHeadersImpl = (s, h) => s.additionalHeaders(h);
 export const headersSentImpl = (s) => s.headersSent;
 export const pushAllowedImpl = (s) => s.pushAllowed;
 export const pushStreamNoOptionsImpl = (s, headers, cb) => s.pushStream(headers, cb);
-export const pushStreamOptionsImpl = (s, headers, options, cb) => s.pushStream(headers, options, cb);
+export const pushStreamOptionsImpl = (s, headers, options, cb) =>
+  s.pushStream(headers, options, cb);
 export const respondImpl = (s, headers, options) => s.respond(headers, options);
 export const respondWithFdImpl = (s, fd, h, o) => s.respondWithFd(fd, h, o);
 export const respondWithFileImpl = (s, file, headers, o) => s.respondWithFile(file, headers, o);
 
 // client
-

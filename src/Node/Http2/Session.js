@@ -12,8 +12,14 @@ export const destroyedImpl = (http2Session) => http2Session.destroyed;
 export const encryptedImpl = (http2Session) => http2Session.encrypted;
 export const goAwayImpl = (http2Session) => http2Session.goAway();
 export const goAwayCodeImpl = (http2Session, code) => http2Session.goAway(code);
-export const goAwayCodeLastStreamIdImpl = (http2Session, code, lastStreamId) => http2Session.goAway(code, lastStreamId);
-export const goAwayCodeLastStreamIdOpaqueDataImpl = (http2Session, code, lastStreamId, opaqueData) => http2Session.goAway(code, lastStreamId, opaqueData);
+export const goAwayCodeLastStreamIdImpl = (http2Session, code, lastStreamId) =>
+  http2Session.goAway(code, lastStreamId);
+export const goAwayCodeLastStreamIdOpaqueDataImpl = (
+  http2Session,
+  code,
+  lastStreamId,
+  opaqueData
+) => http2Session.goAway(code, lastStreamId, opaqueData);
 export const localSettingsImpl = (http2Session) => http2Session.localSettings;
 export const originSetImpl = (http2Session) => http2Session.originSet;
 export const pendingSettingsAckImpl = (http2Session) => http2Session.pendingSettingsAck;
@@ -21,7 +27,8 @@ export const pingImpl = (http2Session, cb) => http2Session.ping(cb);
 export const pingPayloadImpl = (http2Session, payload, cb) => http2Session.ping(payload, cb);
 export const refImpl = (http2Session) => http2Session.ref();
 export const remoteSettingsImpl = (http2Session) => http2Session.remoteSettings;
-export const setLocalWindowSizeImpl = (http2Session, windowSize) => http2Session.setLocalWindowSize(windowSize);
+export const setLocalWindowSizeImpl = (http2Session, windowSize) =>
+  http2Session.setLocalWindowSize(windowSize);
 export const setTimeoutImpl = (http2Session, msecs, cb) => http2Session.setTimeout(msecs, cb);
 export const socketImpl = (http2Session) => http2Session.socket;
 export const stateImpl = (http2Session) => http2Session.state;
@@ -36,4 +43,5 @@ export const originImpl = (http2session, origins) => http2session.origin(origins
 
 // client
 export const requestHeadersImpl = (http2session, headers) => http2session.request(headers);
-export const requestHeadersOptionsImpl = (http2session, headers, options) => http2session.request(headers, options);
+export const requestHeadersOptionsImpl = (http2session, headers, options) =>
+  http2session.request(headers, options);

@@ -9,3 +9,5 @@
 /.psa*
 /.spago
 /.vscode
+/test/localhost-cert.pem
+/test/localhost-privkey.pem
