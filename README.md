@@ -6,7 +6,7 @@ PureScript bindings to the `http2` Node.js module
 
 The bindings for the module have been implemented, excluding the [Compatibility API](https://nodejs.org/dist/latest-v18.x/docs/api/http2.html#compatibility-api).
 
-Install the package with Spago 1.x:
+Install the package with Spago:
 
 ```sh
 spago install node-http2
